@@ -2,11 +2,11 @@ package gows
 
 import (
 	"context"
-	_ "github.com/lib/pq"           // Import the Postgres drive
-	_ "github.com/mattn/go-sqlite3" // Import the SQLite drive
+	"github.com/devlikeapro/gows/store/sqlstore"
+	_ "github.com/lib/pq"           // Import the Postgres driver
+	_ "github.com/mattn/go-sqlite3" // Import the SQLite driver
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
-	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -19,7 +19,7 @@ type GoWS struct {
 	events  chan interface{}
 
 	cancelContext context.CancelFunc
-	container     *sqlstore.Container
+	container     *sqlstore.GContainer
 }
 
 func (gows *GoWS) handleEvent(event interface{}) {

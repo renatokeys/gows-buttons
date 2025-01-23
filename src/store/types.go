@@ -1,0 +1,20 @@
+package store
+
+import "go.mau.fi/whatsmeow/types/events"
+
+type Status int
+
+const (
+	StatusError       Status = 0
+	StatusPending     Status = 1
+	StatusServerAck   Status = 2
+	StatusDeliveryAck Status = 3
+	StatusRead        Status = 4
+	StatusPlayed      Status = 5
+)
+
+// StoredMessage contains a message and some additional data.
+type StoredMessage struct {
+	*events.Message
+	Status Status
+}
