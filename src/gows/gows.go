@@ -2,7 +2,8 @@ package gows
 
 import (
 	"context"
-	"github.com/devlikeapro/gows/store/sqlstore"
+	"github.com/devlikeapro/gows/storage"
+	"github.com/devlikeapro/gows/storage/sqlstorage"
 	_ "github.com/lib/pq"           // Import the Postgres driver
 	_ "github.com/mattn/go-sqlite3" // Import the SQLite driver
 	"go.mau.fi/whatsmeow"
@@ -16,10 +17,11 @@ import (
 type GoWS struct {
 	*whatsmeow.Client
 	Context context.Context
-	events  chan interface{}
+	Storage *storage.Storage
 
+	events        chan interface{}
 	cancelContext context.CancelFunc
-	container     *sqlstore.GContainer
+	container     *sqlstorage.GContainer
 }
 
 func (gows *GoWS) handleEvent(event interface{}) {
@@ -46,6 +48,12 @@ func (gows *GoWS) handleEvent(event interface{}) {
 
 func (gows *GoWS) Start() error {
 	gows.AddEventHandler(gows.handleEvent)
+	st := &GOWSStorage{
+		gows:    gows,
+		log:     gows.Log.Sub("Storage"),
+		storage: gows.Storage,
+	}
+	gows.AddEventHandler(st.handleEvent)
 
 	// Not connected, listen for QR code events
 	if gows.Store.ID == nil {
@@ -104,7 +112,7 @@ type ConnectedEventData struct {
 
 func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address string) (*GoWS, error) {
 	// Prepare the database
-	container, err := sqlstore.New(dialect, address, log.Sub("Database"))
+	container, err := sqlstorage.New(dialect, address, log.Sub("Database"))
 	if err != nil {
 		return nil, err
 	}
@@ -120,9 +128,11 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 	client.EmitAppStateEventsOnFullSync = true
 
 	ctx, cancel := context.WithCancel(ctx)
+	storage := container.NewStorage()
 	gows := GoWS{
 		client,
 		ctx,
+		storage,
 		make(chan interface{}, 10),
 		cancel,
 		container,

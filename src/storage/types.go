@@ -1,4 +1,4 @@
-package store
+package storage
 
 import "go.mau.fi/whatsmeow/types/events"
 

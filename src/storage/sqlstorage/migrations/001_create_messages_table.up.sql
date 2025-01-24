@@ -1,10 +1,11 @@
 -- Create the gows_messages table
 CREATE TABLE gows_messages (
-                               jid TEXT NOT NULL,                -- Unique identifier for the chat (e.g., user or group)
-                               id TEXT NOT NULL,                 -- Unique identifier for the message within a chat
+                               jid VARCHAR(100) NOT NULL,        -- Unique identifier for the chat (e.g., user or group)
+                               id VARCHAR(100) NOT NULL          -- Unique identifier for the message within a chat
                                timestamp TIMESTAMP NOT NULL,     -- Message timestamp
+                               from_me BOOLEAN NOT NULL,         -- Whether the message was sent by the user
                                data TEXT NOT NULL,               -- Message data
-                               PRIMARY KEY (jid, id)             -- Composite primary key (jid + id)
+                               PRIMARY KEY (id)                  -- Primary key
 );
 
 -- Index for id (useful if filtering by id)

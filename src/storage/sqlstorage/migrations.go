@@ -1,4 +1,4 @@
-package sqlstore
+package sqlstorage
 
 import (
 	"errors"
@@ -30,11 +30,7 @@ func (c *GContainer) Migrate() error {
 	var driver database.Driver
 
 	switch {
-	case c.dialect == "sqlite":
-		driver, err = sqlite3.WithInstance(c.db.DB, &sqlite3.Config{
-			MigrationsTable: MigrationsTable,
-		})
-	case c.dialect == "sqlite3":
+	case c.dialect == "sqlite3" || c.dialect == "sqlite":
 		driver, err = sqlite3.WithInstance(c.db.DB, &sqlite3.Config{
 			MigrationsTable: MigrationsTable,
 		})

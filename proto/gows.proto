@@ -14,6 +14,13 @@ message OptionalUInt32 {
   uint32 value = 1;
 }
 
+message OptionalUInt64 {
+  uint64 value = 1;
+}
+message OptionalBool {
+  bool value = 1;
+}
+
 //
 // Events
 //
@@ -59,7 +66,14 @@ service MessageService {
   // Media
   //
   rpc DownloadMedia(DownloadMediaRequest) returns (DownloadMediaResponse);
+  //
+  // Storage
+  //
+  rpc GetMessageById(EntityByIdRequest) returns (Json);
+  rpc GetMessages(GetMessagesRequest) returns (JsonList);
 }
+
+
 
 
 //
@@ -283,3 +297,41 @@ message DownloadMediaResponse {
   bytes content = 1;
 }
 
+//
+// Storage
+//
+
+message EntityByIdRequest {
+  Session session = 1;
+  string id = 2;
+}
+
+message Json {
+  string data = 1;
+}
+
+message JsonList {
+  repeated Json elements = 1;
+}
+
+message Pagination {
+  uint64 limit = 1;
+  uint64 offset = 2;
+}
+
+
+//
+// Storage - Messages
+//
+message MessageFilters {
+  OptionalString jid = 1;
+  OptionalUInt64 timestampGte = 2;
+  OptionalUInt64 timestampLte = 3;
+  OptionalBool fromMe = 4;
+}
+
+message GetMessagesRequest {
+  Session session = 1;
+  MessageFilters filters = 2;
+  Pagination pagination = 3;
+}

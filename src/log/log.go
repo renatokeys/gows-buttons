@@ -44,7 +44,8 @@ func (s *stdoutLogger) Warnf(msg string, args ...interface{})  { s.outputf("WARN
 func (s *stdoutLogger) Infof(msg string, args ...interface{})  { s.outputf("INFO", msg, args...) }
 func (s *stdoutLogger) Debugf(msg string, args ...interface{}) {
 	// If mod ends with Send or Recv - increase it to TRACE, too wordy
-	if strings.HasSuffix(s.mod, "Send") || strings.HasSuffix(s.mod, "Recv") {
+	// Storage - our own storage, also too wordy
+	if strings.HasSuffix(s.mod, "Send") || strings.HasSuffix(s.mod, "Recv") || strings.HasSuffix(s.mod, "Storage") {
 		s.outputf("TRACE", msg, args...)
 		return
 	}
