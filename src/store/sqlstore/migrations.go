@@ -31,15 +31,15 @@ func (c *GContainer) Migrate() error {
 
 	switch {
 	case c.dialect == "sqlite":
-		driver, err = sqlite3.WithInstance(c.db, &sqlite3.Config{
+		driver, err = sqlite3.WithInstance(c.db.DB, &sqlite3.Config{
 			MigrationsTable: MigrationsTable,
 		})
 	case c.dialect == "sqlite3":
-		driver, err = sqlite3.WithInstance(c.db, &sqlite3.Config{
+		driver, err = sqlite3.WithInstance(c.db.DB, &sqlite3.Config{
 			MigrationsTable: MigrationsTable,
 		})
 	case c.dialect == "postgres":
-		driver, err = postgres.WithInstance(c.db, &postgres.Config{
+		driver, err = postgres.WithInstance(c.db.DB, &postgres.Config{
 			MigrationsTable: MigrationsTable,
 		})
 	}
