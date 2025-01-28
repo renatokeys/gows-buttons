@@ -74,6 +74,8 @@ service MessageService {
 
   rpc GetContacts(GetContactsRequest) returns (JsonList);
   rpc GetContactById(EntityByIdRequest) returns (Json);
+
+  rpc GetChats(GetChatsRequest) returns (JsonList);
 }
 
 
@@ -353,6 +355,15 @@ message GetMessagesRequest {
 //
 
 message GetContactsRequest {
+  Session session = 1;
+  SortBy sortBy = 2;
+  Pagination pagination = 3;
+}
+
+//
+// Storage - Chats
+//
+message GetChatsRequest {
   Session session = 1;
   SortBy sortBy = 2;
   Pagination pagination = 3;

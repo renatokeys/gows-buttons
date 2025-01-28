@@ -5,6 +5,7 @@ import (
 	"github.com/devlikeapro/gows/storage"
 	meowstorage "github.com/devlikeapro/gows/storage/meow"
 	"github.com/devlikeapro/gows/storage/sqlstorage"
+	"github.com/devlikeapro/gows/storage/views"
 	_ "github.com/jackc/pgx/v5"     // Import the Postgres driver
 	_ "github.com/mattn/go-sqlite3" // Import the SQLite driver
 	"go.mau.fi/whatsmeow"
@@ -138,7 +139,8 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 		container,
 	}
 	storage := container.NewStorage()
-	storage.ContactStorage = meowstorage.NewContactStorage(gows.Store)
+	storage.Contacts = meowstorage.NewContactStorage(gows.Store)
+	storage.Chats = views.NewChatView(storage.Messages, storage.Contacts)
 	gows.Storage = storage
 	return &gows, nil
 }

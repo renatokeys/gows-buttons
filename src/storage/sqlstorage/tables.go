@@ -26,22 +26,3 @@ var MessageTable = Table{
 		"data",
 	},
 }
-
-var ChatTable = Table{
-	Name: "gows_chats",
-	Columns: []string{
-		"jid",
-		"name",
-		"conversation_timestamp",
-		"data",
-	},
-	DataField: "data",
-	OnConflict: []string{
-		"jid",
-	},
-	UpdateOnConflict: []string{
-		"name",
-		"conversation_timestamp",
-		"data",
-	},
-}

@@ -14,12 +14,61 @@ type GOWSStorage struct {
 	storage *storage.Storage
 }
 
+func shouldStoreMessage(event *events.Message) bool {
+	if event.Message == nil {
+		return false
+	}
+	msg := event.Message
+	switch {
+	case msg.Conversation != nil:
+		return true
+	case msg.ExtendedTextMessage != nil:
+		return true
+	case msg.ImageMessage != nil:
+		return true
+	case msg.ContactMessage != nil:
+		return true
+	case msg.LocationMessage != nil:
+		return true
+	case msg.VideoMessage != nil:
+		return true
+	case msg.AudioMessage != nil:
+		return true
+	case msg.DocumentMessage != nil:
+		return true
+	case msg.StickerMessage != nil:
+		return true
+	case msg.ContactsArrayMessage != nil:
+		return true
+	case msg.TemplateMessage != nil:
+		return true
+	case msg.ListMessage != nil:
+		return true
+	case msg.RichResponseMessage != nil:
+		return true
+	case msg.PollCreationMessage != nil:
+		return true
+	case msg.PollCreationMessageV2 != nil:
+		return true
+	case msg.PollCreationMessageV3 != nil:
+		return true
+	case msg.PollCreationMessageV4 != nil:
+		return true
+	case msg.PollCreationMessageV5 != nil:
+		return true
+	default:
+		return false
+	}
+}
+
 func (st *GOWSStorage) handleEvent(event interface{}) {
 	switch event.(type) {
 	case *events.Message:
 		msg := event.(*events.Message)
-		st.handleMessageEvent(msg)
-		st.log.Debugf("Stored message %v(%v)", msg.Info.Chat, msg.Info.ID)
+		saved := st.handleMessageEvent(msg)
+		if saved {
+			st.log.Debugf("Stored message %v(%v)", msg.Info.Chat, msg.Info.ID)
+		}
 	case *events.Receipt:
 		st.handleReceipt(event.(*events.Receipt))
 	case *events.HistorySync:
@@ -27,7 +76,10 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 	}
 }
 
-func (st *GOWSStorage) handleMessageEvent(event *events.Message) {
+func (st *GOWSStorage) handleMessageEvent(event *events.Message) bool {
+	if !shouldStoreMessage(event) {
+		return false
+	}
 	var status storage.Status
 	if event.SourceWebMsg != nil && event.SourceWebMsg.Status != nil {
 		status = storage.Status(*event.SourceWebMsg.Status)
@@ -39,13 +91,14 @@ func (st *GOWSStorage) handleMessageEvent(event *events.Message) {
 		}
 	}
 
-	err := st.storage.MessageStorage.UpsertOneMessage(&storage.StoredMessage{
+	err := st.storage.Messages.UpsertOneMessage(&storage.StoredMessage{
 		Status:  status,
 		Message: event,
 	})
 	if err != nil {
 		st.log.Errorf("Error storing message %v(%v): %v", event.Info.Chat, event.Info.ID, err)
 	}
+	return true
 }
 
 func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
@@ -59,7 +112,7 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 		status = storage.StatusPlayed
 	}
 	for _, id := range event.MessageIDs {
-		msg, err := st.storage.MessageStorage.GetMessage(id)
+		msg, err := st.storage.Messages.GetMessage(id)
 		if err != nil {
 			st.log.Errorf("Error getting message %v(%v): %v", event.Chat, id, err)
 			continue
@@ -68,7 +121,7 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 			continue
 		}
 		msg.Status = status
-		err = st.storage.MessageStorage.UpsertOneMessage(msg)
+		err = st.storage.Messages.UpsertOneMessage(msg)
 		if err != nil {
 			st.log.Errorf("Error updating status for message %v(%v): %v", event.Chat, id, err)
 			continue

@@ -6,7 +6,6 @@ import (
 
 func (gc *GContainer) NewStorage() *storage.Storage {
 	return &storage.Storage{
-		MessageStorage: gc.NewMessageStorage(),
-		ChatStorage:    gc.NewChatStorage(),
+		Messages: gc.NewMessageStorage(),
 	}
 }

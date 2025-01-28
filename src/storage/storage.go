@@ -23,9 +23,9 @@ type Pagination struct {
 }
 
 type Storage struct {
-	MessageStorage MessageStorage
-	ContactStorage ContactStorage
-	ChatStorage    ChatStorage
+	Messages MessageStorage
+	Contacts ContactStorage
+	Chats    ChatStorage
 }
 
 type MessageFilter struct {
@@ -37,6 +37,7 @@ type MessageFilter struct {
 
 type MessageStorage interface {
 	UpsertOneMessage(msg *StoredMessage) error
+	GetLastMessagesInChats(sortBy Sort, pagination Pagination) ([]*StoredMessage, error)
 	GetAllMessages(filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
 	GetChatMessages(jid types.JID, filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
 	GetMessage(id types.MessageID) (*StoredMessage, error)
@@ -50,8 +51,5 @@ type ContactStorage interface {
 }
 
 type ChatStorage interface {
-	UpsertChat(chat *StoredChat) error
-	GetChat(jid types.JID) (*StoredChat, error)
 	GetChats(sortBy Sort, pagination Pagination) ([]*StoredChat, error)
-	DeleteChat(jid types.JID) error
 }

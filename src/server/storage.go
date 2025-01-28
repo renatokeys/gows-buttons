@@ -42,7 +42,7 @@ func (s *Server) GetMessageById(ctx context.Context, req *__.EntityByIdRequest) 
 		return nil, err
 	}
 	id := req.Id
-	msg, err := cli.Storage.MessageStorage.GetMessage(id)
+	msg, err := cli.Storage.Messages.GetMessage(id)
 	if err != nil {
 		return nil, fmt.Errorf("error getting message %v: %w", id, err)
 	}
@@ -63,7 +63,7 @@ func (s *Server) GetMessages(ctx context.Context, req *__.GetMessagesRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	messages, err := cli.Storage.MessageStorage.GetAllMessages(*filters, pagination)
+	messages, err := cli.Storage.Messages.GetAllMessages(*filters, pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (s *Server) GetContactById(ctx context.Context, req *__.EntityByIdRequest) 
 		return nil, fmt.Errorf("error parsing jid %v: %w", req.Id, err)
 	}
 
-	contact, err := cli.Storage.ContactStorage.GetContact(user)
+	contact, err := cli.Storage.Contacts.GetContact(user)
 	if err != nil {
 		return nil, fmt.Errorf("error getting contact %v: %w", user, err)
 	}
@@ -123,7 +123,7 @@ func (s *Server) GetContacts(ctx context.Context, req *__.GetContactsRequest) (*
 	}
 	pagination := toPagination(req.Pagination)
 	sort := toStorageSort(req.SortBy)
-	contacts, err := cli.Storage.ContactStorage.GetAllContacts(sort, pagination)
+	contacts, err := cli.Storage.Contacts.GetAllContacts(sort, pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -155,4 +155,23 @@ func toStorageSort(sortBy *__.SortBy) storage.Sort {
 		Order: order,
 	}
 	return sort
+}
+
+func (s *Server) GetChats(ctx context.Context, req *__.GetChatsRequest) (*__.JsonList, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+	pagination := toPagination(req.Pagination)
+	sort := toStorageSort(req.SortBy)
+	chats, err := cli.Storage.Chats.GetChats(sort, pagination)
+	if err != nil {
+		return nil, err
+	}
+	response, err := toJsonList(chats)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling chats: %w", err)
+	}
+	return response, nil
+
 }

@@ -95,6 +95,10 @@ func (kv *EntityRepository[Entity]) FilterBy(
 	for _, cond := range conditions {
 		sql = sql.Where(cond)
 	}
+	return kv.Retrieve(sql, pagination, sort)
+}
+
+func (kv *EntityRepository[Entity]) Retrieve(sql sq.SelectBuilder, pagination storage.Pagination, sort []storage.Sort) (entities []*Entity, err error) {
 	if pagination.Limit > 0 {
 		sql = sql.Limit(pagination.Limit)
 	}
@@ -122,7 +126,6 @@ func (kv *EntityRepository[Entity]) FilterBy(
 		entities = append(entities, &entity)
 	}
 	return entities, nil
-
 }
 
 func (kv *EntityRepository[Entity]) GetBy(conditions []sq.Sqlizer) (entity *Entity, err error) {
