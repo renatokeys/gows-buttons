@@ -1,6 +1,9 @@
 package storage
 
-import "go.mau.fi/whatsmeow/types/events"
+import (
+	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
+)
 
 type Status int
 
@@ -17,4 +20,10 @@ const (
 type StoredMessage struct {
 	*events.Message
 	Status Status
+}
+
+type StoredContact struct {
+	Jid      types.JID
+	Name     string
+	PushName string
 }

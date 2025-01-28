@@ -3,6 +3,7 @@ package gows
 import (
 	"context"
 	"github.com/devlikeapro/gows/storage"
+	meowstorage "github.com/devlikeapro/gows/storage/meow"
 	"github.com/devlikeapro/gows/storage/sqlstorage"
 	_ "github.com/lib/pq"           // Import the Postgres driver
 	_ "github.com/mattn/go-sqlite3" // Import the SQLite driver
@@ -128,15 +129,17 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 	client.EmitAppStateEventsOnFullSync = true
 
 	ctx, cancel := context.WithCancel(ctx)
-	storage := container.NewStorage()
 	gows := GoWS{
 		client,
 		ctx,
-		storage,
+		nil,
 		make(chan interface{}, 10),
 		cancel,
 		container,
 	}
+	storage := container.NewStorage()
+	storage.ContactStorage = meowstorage.NewContactStorage(gows.Store)
+	gows.Storage = storage
 	return &gows, nil
 }
 

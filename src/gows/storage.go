@@ -39,7 +39,7 @@ func (st *GOWSStorage) handleMessageEvent(event *events.Message) {
 		}
 	}
 
-	err := st.storage.MessageStore.UpsertOneMessage(&storage.StoredMessage{
+	err := st.storage.MessageStorage.UpsertOneMessage(&storage.StoredMessage{
 		Status:  status,
 		Message: event,
 	})
@@ -59,7 +59,7 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 		status = storage.StatusPlayed
 	}
 	for _, id := range event.MessageIDs {
-		msg, err := st.storage.MessageStore.GetMessage(id)
+		msg, err := st.storage.MessageStorage.GetMessage(id)
 		if err != nil {
 			st.log.Errorf("Error getting message %v(%v): %v", event.Chat, id, err)
 			continue
@@ -68,7 +68,7 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 			continue
 		}
 		msg.Status = status
-		err = st.storage.MessageStore.UpsertOneMessage(msg)
+		err = st.storage.MessageStorage.UpsertOneMessage(msg)
 		if err != nil {
 			st.log.Errorf("Error updating status for message %v(%v): %v", event.Chat, id, err)
 			continue

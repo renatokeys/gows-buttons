@@ -42,7 +42,7 @@ func (s *Server) GetMessageById(ctx context.Context, req *__.EntityByIdRequest) 
 		return nil, err
 	}
 	id := req.Id
-	msg, err := cli.Storage.MessageStore.GetMessage(id)
+	msg, err := cli.Storage.MessageStorage.GetMessage(id)
 	if err != nil {
 		return nil, fmt.Errorf("error getting message %v: %w", id, err)
 	}
@@ -58,31 +58,12 @@ func (s *Server) GetMessages(ctx context.Context, req *__.GetMessagesRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	pagination := storage.Pagination{
-		Limit:  req.Pagination.Limit,
-		Offset: req.Pagination.Offset,
+	pagination := toPagination(req.Pagination)
+	filters, err := parseMessageFilters(req.Filters)
+	if err != nil {
+		return nil, err
 	}
-
-	// Filters
-	filters := storage.MessageFilter{}
-	if req.Filters.Jid != nil {
-		jid, err := types.ParseJID(req.Filters.Jid.Value)
-		if err != nil {
-			return nil, fmt.Errorf("error parsing jid %v: %w", req.Filters.Jid.Value, err)
-		}
-		filters.Jid = &jid
-	}
-	if req.Filters.TimestampGte != nil {
-		filters.TimestampGte = parseTimeS(req.Filters.TimestampGte.Value)
-	}
-	if req.Filters.TimestampLte != nil {
-		filters.TimestampLte = parseTimeS(req.Filters.TimestampLte.Value)
-	}
-	if req.Filters.FromMe != nil {
-		filters.FromMe = &req.Filters.FromMe.Value
-	}
-
-	messages, err := cli.Storage.MessageStore.GetAllMessages(filters, pagination)
+	messages, err := cli.Storage.MessageStorage.GetAllMessages(*filters, pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -91,4 +72,87 @@ func (s *Server) GetMessages(ctx context.Context, req *__.GetMessagesRequest) (*
 		return nil, fmt.Errorf("error marshaling messages: %w", err)
 	}
 	return response, nil
+}
+
+func parseMessageFilters(reqFilters *__.MessageFilters) (*storage.MessageFilter, error) {
+	filters := storage.MessageFilter{}
+	if reqFilters.Jid != nil {
+		jid, err := types.ParseJID(reqFilters.Jid.Value)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing jid %v: %w", reqFilters.Jid.Value, err)
+		}
+		filters.Jid = &jid
+	}
+	if reqFilters.TimestampGte != nil {
+		filters.TimestampGte = parseTimeS(reqFilters.TimestampGte.Value)
+	}
+	if reqFilters.TimestampLte != nil {
+		filters.TimestampLte = parseTimeS(reqFilters.TimestampLte.Value)
+	}
+	if reqFilters.FromMe != nil {
+		filters.FromMe = &reqFilters.FromMe.Value
+	}
+	return &filters, nil
+}
+
+func (s *Server) GetContactById(ctx context.Context, req *__.EntityByIdRequest) (*__.Json, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+	user, err := types.ParseJID(req.Id)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing jid %v: %w", req.Id, err)
+	}
+
+	contact, err := cli.Storage.ContactStorage.GetContact(user)
+	if err != nil {
+		return nil, fmt.Errorf("error getting contact %v: %w", user, err)
+	}
+	response, err := toJson(contact)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling contact %v: %w", user, err)
+	}
+	return response, nil
+}
+
+func (s *Server) GetContacts(ctx context.Context, req *__.GetContactsRequest) (*__.JsonList, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+	pagination := toPagination(req.Pagination)
+	sort := toStorageSort(req.SortBy)
+	contacts, err := cli.Storage.ContactStorage.GetAllContacts(sort, pagination)
+	if err != nil {
+		return nil, err
+	}
+	response, err := toJsonList(contacts)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling contacts: %w", err)
+	}
+	return response, nil
+}
+
+func toPagination(pagination *__.Pagination) storage.Pagination {
+	return storage.Pagination{
+		Limit:  pagination.Limit,
+		Offset: pagination.Offset,
+	}
+}
+
+func toStorageSort(sortBy *__.SortBy) storage.Sort {
+	var order storage.SortOrder
+	switch sortBy.Order {
+	case __.SortBy_ASC:
+		order = storage.SortAsc
+	case __.SortBy_DESC:
+		order = storage.SortDesc
+	}
+
+	sort := storage.Sort{
+		Field: sortBy.Field,
+		Order: order,
+	}
+	return sort
 }

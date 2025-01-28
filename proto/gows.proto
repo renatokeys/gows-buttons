@@ -71,6 +71,9 @@ service MessageService {
   //
   rpc GetMessageById(EntityByIdRequest) returns (Json);
   rpc GetMessages(GetMessagesRequest) returns (JsonList);
+
+  rpc GetContacts(GetContactsRequest) returns (JsonList);
+  rpc GetContactById(EntityByIdRequest) returns (Json);
 }
 
 
@@ -319,6 +322,15 @@ message Pagination {
   uint64 offset = 2;
 }
 
+message SortBy {
+  string field = 1;
+  enum Order {
+    ASC = 0;
+    DESC = 1;
+  }
+  Order order = 2;
+}
+
 
 //
 // Storage - Messages
@@ -333,5 +345,15 @@ message MessageFilters {
 message GetMessagesRequest {
   Session session = 1;
   MessageFilters filters = 2;
+  Pagination pagination = 3;
+}
+
+//
+// Storage - Contacts
+//
+
+message GetContactsRequest {
+  Session session = 1;
+  SortBy sortBy = 2;
   Pagination pagination = 3;
 }

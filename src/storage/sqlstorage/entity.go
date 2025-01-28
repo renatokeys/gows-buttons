@@ -20,18 +20,6 @@ type Mapper[Entity any] interface {
 	Unmarshal([]byte, *Entity) error
 }
 
-type SortOrder string
-
-const (
-	SortAsc  SortOrder = "ASC"
-	SortDesc SortOrder = "DESC"
-)
-
-type Sort struct {
-	Field string
-	Order SortOrder
-}
-
 type EntityRepository[Entity any] struct {
 	db         *sqlx.DB
 	table      Table
@@ -95,12 +83,12 @@ func (kv *EntityRepository[Entity]) UpsertOne(entity *Entity) error {
 }
 
 func (kv *EntityRepository[Entity]) AllBy(conditions []sq.Sqlizer) (entities []*Entity, err error) {
-	return kv.FilterBy(conditions, make([]Sort, 0), storage.Pagination{0, 0})
+	return kv.FilterBy(conditions, make([]storage.Sort, 0), storage.Pagination{0, 0})
 }
 
 func (kv *EntityRepository[Entity]) FilterBy(
 	conditions []sq.Sqlizer,
-	sort []Sort,
+	sort []storage.Sort,
 	pagination storage.Pagination,
 ) (entities []*Entity, err error) {
 	sql := sq.Select(kv.table.DataField).From(kv.table.Name)
@@ -138,7 +126,7 @@ func (kv *EntityRepository[Entity]) FilterBy(
 }
 
 func (kv *EntityRepository[Entity]) GetBy(conditions []sq.Sqlizer) (entity *Entity, err error) {
-	entities, err := kv.FilterBy(conditions, make([]Sort, 0), storage.Pagination{0, 1})
+	entities, err := kv.FilterBy(conditions, make([]storage.Sort, 0), storage.Pagination{0, 1})
 	if err != nil {
 		return nil, err
 	}

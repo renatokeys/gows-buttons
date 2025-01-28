@@ -29,6 +29,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
+	github.com/samber/lo v1.49.0 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	go.mau.fi/libsignal v0.1.1 // indirect
 	go.mau.fi/util v0.8.3 // indirect

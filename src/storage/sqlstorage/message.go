@@ -30,9 +30,9 @@ func (f *MessageMapper) Unmarshal(data []byte, entity *storage.StoredMessage) er
 	return json.Unmarshal(data, entity)
 }
 
-var _ storage.MessageStore = (*SqlMessageStore)(nil)
+var _ storage.MessageStorage = (*SqlMessageStore)(nil)
 
-func (gc *GContainer) NewMessageStore() *SqlMessageStore {
+func (gc *GContainer) NewMessageStorage() *SqlMessageStore {
 	repo := NewEntityRepository[storage.StoredMessage](
 		gc.db,
 		MessageTable,
@@ -62,10 +62,10 @@ func (s SqlMessageStore) GetAllMessages(filters storage.MessageFilter, paginatio
 		conditions = append(conditions, sq.Eq{"from_me": filters.FromMe})
 	}
 
-	sort := []Sort{
+	sort := []storage.Sort{
 		{
 			Field: "timestamp",
-			Order: SortDesc,
+			Order: storage.SortDesc,
 		},
 	}
 	return s.FilterBy(conditions, sort, pagination)

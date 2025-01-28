@@ -5,9 +5,26 @@ import (
 	"time"
 )
 
+type SortOrder string
+
+const (
+	SortAsc  SortOrder = "ASC"
+	SortDesc SortOrder = "DESC"
+)
+
+type Sort struct {
+	Field string
+	Order SortOrder
+}
+
 type Pagination struct {
 	Offset uint64
 	Limit  uint64
+}
+
+type Storage struct {
+	MessageStorage MessageStorage
+	ContactStorage ContactStorage
 }
 
 type MessageFilter struct {
@@ -17,7 +34,7 @@ type MessageFilter struct {
 	FromMe       *bool
 }
 
-type MessageStore interface {
+type MessageStorage interface {
 	UpsertOneMessage(msg *StoredMessage) error
 	GetAllMessages(filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
 	GetChatMessages(jid types.JID, filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
@@ -26,6 +43,7 @@ type MessageStore interface {
 	DeleteMessage(id types.MessageID) error
 }
 
-type Storage struct {
-	MessageStore MessageStore
+type ContactStorage interface {
+	GetContact(user types.JID) (*StoredContact, error)
+	GetAllContacts(sortBy Sort, pagination Pagination) ([]*StoredContact, error)
 }
