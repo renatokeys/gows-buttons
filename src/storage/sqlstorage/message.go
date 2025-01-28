@@ -68,7 +68,7 @@ func (s SqlMessageStore) GetAllMessages(filters storage.MessageFilter, paginatio
 			Order: SortDesc,
 		},
 	}
-	return s.FilterBy(make([]sq.Sqlizer, 0), sort, pagination)
+	return s.FilterBy(conditions, sort, pagination)
 }
 
 func (s SqlMessageStore) GetChatMessages(jid types.JID, filters storage.MessageFilter, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
@@ -81,7 +81,7 @@ func (s SqlMessageStore) GetMessage(id types.MessageID) (*storage.StoredMessage,
 }
 
 func (s SqlMessageStore) DeleteChatMessages(jid types.JID) error {
-	return s.DeleteBy(map[string]interface{}{"jid": jid})
+	return s.DeleteBy([]sq.Sqlizer{sq.Eq{"jid": jid}})
 }
 
 func (s SqlMessageStore) DeleteMessage(id types.MessageID) error {

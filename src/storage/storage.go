@@ -2,6 +2,7 @@ package storage
 
 import (
 	"go.mau.fi/whatsmeow/types"
+	"time"
 )
 
 type Pagination struct {
@@ -11,8 +12,8 @@ type Pagination struct {
 
 type MessageFilter struct {
 	Jid          *types.JID
-	TimestampGte *uint64
-	TimestampLte *uint64
+	TimestampGte *time.Time
+	TimestampLte *time.Time
 	FromMe       *bool
 }
 

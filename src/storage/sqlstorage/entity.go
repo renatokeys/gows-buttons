@@ -104,7 +104,7 @@ func (kv *EntityRepository[Entity]) FilterBy(
 	pagination storage.Pagination,
 ) (entities []*Entity, err error) {
 	sql := sq.Select(kv.table.DataField).From(kv.table.Name)
-	for cond := range conditions {
+	for _, cond := range conditions {
 		sql = sql.Where(cond)
 	}
 	if pagination.Limit > 0 {
@@ -152,10 +152,10 @@ func (kv *EntityRepository[Entity]) GetById(id string) (entity *Entity, err erro
 	return kv.GetBy([]sq.Sqlizer{sq.Eq{"id": id}})
 }
 
-func (kv *EntityRepository[Entity]) DeleteBy(filters map[string]interface{}) error {
+func (kv *EntityRepository[Entity]) DeleteBy(conditions []sq.Sqlizer) error {
 	sql := sq.Delete(kv.table.Name)
-	for field, value := range filters {
-		sql = sql.Where(sq.Eq{field: value})
+	for _, cond := range conditions {
+		sql = sql.Where(cond)
 	}
 	query, args, err := sql.ToSql()
 	if err != nil {
@@ -166,5 +166,5 @@ func (kv *EntityRepository[Entity]) DeleteBy(filters map[string]interface{}) err
 }
 
 func (kv *EntityRepository[Entity]) DeleteById(id string) error {
-	return kv.DeleteBy(map[string]interface{}{"id": id})
+	return kv.DeleteBy([]sq.Sqlizer{sq.Eq{"id": id}})
 }

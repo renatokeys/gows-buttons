@@ -7,12 +7,13 @@ import (
 	__ "github.com/devlikeapro/gows/proto"
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/types"
+	"time"
 )
 
-func setOptionalValue[T any](src *T, dest **T) {
-	if src != nil {
-		*dest = src
-	}
+func parseTimeS(s uint64) *time.Time {
+	seconds := int64(s)
+	value := time.Unix(seconds, 0)
+	return &value
 }
 
 func toJson(data interface{}) (*__.Json, error) {
@@ -72,10 +73,10 @@ func (s *Server) GetMessages(ctx context.Context, req *__.GetMessagesRequest) (*
 		filters.Jid = &jid
 	}
 	if req.Filters.TimestampGte != nil {
-		filters.TimestampGte = &req.Filters.TimestampGte.Value
+		filters.TimestampGte = parseTimeS(req.Filters.TimestampGte.Value)
 	}
 	if req.Filters.TimestampLte != nil {
-		filters.TimestampLte = &req.Filters.TimestampLte.Value
+		filters.TimestampLte = parseTimeS(req.Filters.TimestampLte.Value)
 	}
 	if req.Filters.FromMe != nil {
 		filters.FromMe = &req.Filters.FromMe.Value
