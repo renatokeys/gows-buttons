@@ -3,6 +3,7 @@ package storage
 import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
+	"time"
 )
 
 type Status int
@@ -26,4 +27,10 @@ type StoredContact struct {
 	Jid      types.JID
 	Name     string
 	PushName string
+}
+
+type StoredChat struct {
+	Jid                   types.JID
+	Name                  string
+	ConversationTimestamp time.Time
 }

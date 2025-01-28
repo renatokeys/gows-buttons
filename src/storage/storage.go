@@ -25,6 +25,7 @@ type Pagination struct {
 type Storage struct {
 	MessageStorage MessageStorage
 	ContactStorage ContactStorage
+	ChatStorage    ChatStorage
 }
 
 type MessageFilter struct {
@@ -46,4 +47,11 @@ type MessageStorage interface {
 type ContactStorage interface {
 	GetContact(user types.JID) (*StoredContact, error)
 	GetAllContacts(sortBy Sort, pagination Pagination) ([]*StoredContact, error)
+}
+
+type ChatStorage interface {
+	UpsertChat(chat *StoredChat) error
+	GetChat(jid types.JID) (*StoredChat, error)
+	GetChats(sortBy Sort, pagination Pagination) ([]*StoredChat, error)
+	DeleteChat(jid types.JID) error
 }
