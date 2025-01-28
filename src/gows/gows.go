@@ -5,7 +5,7 @@ import (
 	"github.com/devlikeapro/gows/storage"
 	meowstorage "github.com/devlikeapro/gows/storage/meow"
 	"github.com/devlikeapro/gows/storage/sqlstorage"
-	_ "github.com/lib/pq"           // Import the Postgres driver
+	_ "github.com/jackc/pgx/v5"     // Import the Postgres driver
 	_ "github.com/mattn/go-sqlite3" // Import the SQLite driver
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
