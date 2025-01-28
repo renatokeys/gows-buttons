@@ -39,6 +39,8 @@ func (c *GContainer) Migrate() error {
 			MigrationsTable: MigrationsTable,
 		})
 	}
+	// Do not close the driver, we don't own it
+	//defer driver.Close()
 
 	if err != nil {
 		return fmt.Errorf("failed to create database driver: %w", err)
