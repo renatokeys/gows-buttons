@@ -54,11 +54,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Gather proto files
-        run: |
-          mkdir -p proto
-          cp ${{ env.PROTO_SRC_DIR }}/*.proto proto/
-
       - name: Upload proto artifact
         uses: actions/upload-artifact@v3
         with:
