@@ -2,6 +2,7 @@ package sqlstorage
 
 import (
 	"encoding/json"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/types"
@@ -88,13 +89,45 @@ func (s SqlMessageStore) DeleteMessage(id types.MessageID) error {
 	return s.DeleteById(id)
 }
 
-// GetLastMessagesInChats returns the last messages per chat.
-func (s SqlMessageStore) GetLastMessagesInChats(sortBy storage.Sort, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
-	// Subquery to get the id of the last message per chat (based on the latest timestamp)
-	subQuery := sq.Select("DISTINCT ON (jid) id").
+// getLastMessagesPostgresSubquery generates the subquery for PostgreSQL to fetch the ID of the last message per chat.
+func (s SqlMessageStore) getLastMessagesPostgresSubquery() *sq.SelectBuilder {
+	query := sq.Select("DISTINCT ON (jid) id").
 		From(s.table.Name).
 		OrderBy("jid, timestamp DESC")
-	subQueryText, _, err := subQuery.ToSql()
+	return &query
+}
+
+// getLastMessagesSQLiteSubquery generates the subquery for SQLite3 to fetch the ID of the last message per chat.
+func (s SqlMessageStore) getLastMessagesSQLiteSubquery() *sq.SelectBuilder {
+	query := sq.Select("id").
+		FromSelect(
+			sq.Select("id", "jid", "timestamp", "ROW_NUMBER() OVER (PARTITION BY jid ORDER BY timestamp DESC) as rn").
+				From(s.table.Name),
+			"sub").
+		Where("rn = 1")
+	return &query
+}
+
+// getLastMessageSubquery selects the appropriate subquery based on the database type.
+func (s SqlMessageStore) getLastMessageSubquery() (*sq.SelectBuilder, error) {
+	switch s.db.DriverName() {
+	case "postgres":
+		return s.getLastMessagesPostgresSubquery(), nil
+	case "sqlite3":
+		return s.getLastMessagesSQLiteSubquery(), nil
+	default:
+		return nil, fmt.Errorf("unsupported database driver: %s", s.db.DriverName())
+	}
+}
+
+// GetLastMessagesInChats retrieves the last messages in chats based on sorting and pagination.
+func (s SqlMessageStore) GetLastMessagesInChats(sortBy storage.Sort, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
+	// Generate the subquery to get the ID of the last message per chat
+	subQuery, err := s.getLastMessageSubquery()
+	if err != nil {
+		return nil, err
+	}
+	subQueryText, _, err := (*subQuery).ToSql()
 	if err != nil {
 		return nil, err
 	}
