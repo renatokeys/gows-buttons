@@ -44,6 +44,8 @@ jobs:
       - name: Build binary
         run: |
           # Replace with your actual build command
+          export GOPATH=$HOME/go
+          export PATH=$PATH:$GOPATH/bin
           make all
           mkdir -p release
           cp bin/gows release/${{ matrix.binary_name }}
