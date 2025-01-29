@@ -30,10 +30,11 @@ jobs:
 
       - name: Setup build environment
         run: |
-          sudo apt-get update && sudo apt-get install -y build-essential
-          sudo apt install protobuf-compiler
-          sudo apt install -y libvips-dev
-          sudo apt install golang
+          sudo apt-get update 
+          sudo apt-get install -y build-essential
+          sudo apt-get install -y protobuf-compiler
+          sudo apt-get install -y libvips-dev
+          sudo apt-get install -y golang
 
       - name: go install deps
         run: |
