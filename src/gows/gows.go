@@ -24,9 +24,10 @@ type GoWS struct {
 	events        chan interface{}
 	cancelContext context.CancelFunc
 	container     *sqlstorage.GContainer
+	st            *GOWSStorage
 }
 
-func (gows *GoWS) handleEvent(event interface{}) {
+func (gows *GoWS) reissueEvent(event interface{}) {
 	var data interface{}
 	switch event.(type) {
 	case *events.Connected:
@@ -48,14 +49,18 @@ func (gows *GoWS) handleEvent(event interface{}) {
 	}
 }
 
+func (gows *GoWS) handleEvent(event interface{}) {
+	go gows.reissueEvent(event)
+	go gows.st.handleEvent(event)
+}
+
 func (gows *GoWS) Start() error {
-	gows.AddEventHandler(gows.handleEvent)
-	st := &GOWSStorage{
+	gows.st = &GOWSStorage{
 		gows:    gows,
 		log:     gows.Log.Sub("Storage"),
 		storage: gows.Storage,
 	}
-	gows.AddEventHandler(st.handleEvent)
+	gows.AddEventHandler(gows.handleEvent)
 
 	// Not connected, listen for QR code events
 	if gows.Store.ID == nil {
@@ -137,6 +142,7 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 		make(chan interface{}, 10),
 		cancel,
 		container,
+		nil,
 	}
 	storage := container.NewStorage()
 	storage.Contacts = meowstorage.NewContactStorage(gows.Store)
