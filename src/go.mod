@@ -12,7 +12,7 @@ require (
 	github.com/u2takey/ffmpeg-go v0.5.0
 	go.mau.fi/whatsmeow v0.0.0-20250104105216-918c879fcd19
 	google.golang.org/grpc v1.68.0
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.4
 )
 
 require (
