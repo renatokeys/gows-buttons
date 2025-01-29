@@ -94,9 +94,9 @@ jobs:
 
       - name: Setup GitHub CLI
         env:
-          GH_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
+          CLI_GH_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
         run: |
-          gh auth login --with-token <<< "$GH_TOKEN"
+          gh auth login --with-token <<< "$CLI_GH_TOKEN"
           gh config set prompt disabled
 
       - name: Delete existing release if present
