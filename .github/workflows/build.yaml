@@ -9,6 +9,7 @@ on:
 env:
   TARGET_REPO: devlikeapro/gows
   PROTO_SRC_DIR: proto
+  GO_VERSION: 1.23.3
 
 jobs:
   build-binaries:
@@ -34,7 +35,14 @@ jobs:
           sudo apt-get install -y build-essential
           sudo apt-get install -y protobuf-compiler
           sudo apt-get install -y libvips-dev
-          sudo apt-get install -y golang
+
+      - name: go download
+        run: |
+            wget https://golang.org/dl/go${{ env.GO_VERSION }}.linux-${{ matrix.platform }}.tar.gz
+            sudo tar -C /usr/local -xzf go${{ env.GO_VERSION }}.linux-${{ matrix.platform }}.tar.gz
+            export PATH=$PATH:/usr/local/go/bin
+            export GOPATH=$HOME/go
+            export PATH=$PATH:$GOPATH/bin
 
       - name: go install deps
         run: |
