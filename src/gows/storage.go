@@ -141,12 +141,12 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 
 func (st *GOWSStorage) handleHistorySync(event *events.HistorySync) {
 	for _, conv := range event.Data.Conversations {
-		chatJID, err := types.ParseJID(conv.GetId())
+		jid, err := types.ParseJID(conv.GetId())
 		if err != nil {
 			st.log.Errorf("Error parsing JID: %v", err)
 			continue
 		}
-		go st.saveHistoryForOneChat(conv, chatJID)
+		go st.saveHistoryForOneChat(conv, jid)
 	}
 	st.log.Debugf("Saved history for %v chats", len(event.Data.Conversations))
 }
