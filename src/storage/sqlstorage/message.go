@@ -91,10 +91,9 @@ func (s SqlMessageStore) DeleteMessage(id types.MessageID) error {
 // GetLastMessagesInChats returns the last messages per chat.
 func (s SqlMessageStore) GetLastMessagesInChats(sortBy storage.Sort, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
 	// Subquery to get the id of the last message per chat (based on the latest timestamp)
-	subQuery := sq.Select("id").
+	subQuery := sq.Select("DISTINCT ON (jid) id").
 		From(s.table.Name).
-		Where("timestamp = (SELECT MAX(timestamp) FROM " + s.table.Name + " AS sub WHERE sub.jid = " + s.table.Name + ".jid)").
-		GroupBy("jid")
+		OrderBy("jid, timestamp DESC")
 	subQueryText, _, err := subQuery.ToSql()
 	if err != nil {
 		return nil, err
