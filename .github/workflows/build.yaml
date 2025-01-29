@@ -33,6 +33,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y build-essential
           sudo apt install protobuf-compiler
           sudo apt install -y libvips-dev
+          sudo apt install golang
 
       - name: go install deps
         run: |
@@ -47,6 +48,7 @@ jobs:
           # Replace with your actual build command
           export GOPATH=$HOME/go
           export PATH=$PATH:$GOPATH/bin
+          export PATH=$PATH:/usr/local/go/bin
           make all
           mkdir -p release
           cp bin/gows release/${{ matrix.binary_name }}
