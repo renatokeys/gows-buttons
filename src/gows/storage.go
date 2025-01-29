@@ -6,6 +6,7 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
+	"runtime/debug"
 )
 
 type GOWSStorage struct {
@@ -62,6 +63,14 @@ func shouldStoreMessage(event *events.Message) bool {
 }
 
 func (st *GOWSStorage) handleEvent(event interface{}) {
+	// Handle all panic and log error + stack
+	defer func() {
+		if err := recover(); err != nil {
+			stack := debug.Stack()
+			st.log.Errorf("Panic happened when handling event: %v. Stack: %s. Event: %v", err, stack, event)
+		}
+	}()
+
 	switch event.(type) {
 	case *events.Message:
 		msg := event.(*events.Message)
