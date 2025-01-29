@@ -1,0 +1,108 @@
+name: Release Build and Publish
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  TARGET_REPO: devlikeapro/gows
+  PROTO_SRC_DIR: proto
+
+jobs:
+  build-binaries:
+    name: Build Binaries (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - runner: 'buildjet-4vcpu-ubuntu-2204'
+            platform: 'x64'
+            binary_name: 'gows-amd64'
+          - runner: 'buildjet-4vcpu-ubuntu-2204-arm'
+            platform: 'arm64'
+            binary_name: 'gows-arm64'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup build environment
+        run: |
+          # Add any required build environment setup here
+          sudo apt-get update && sudo apt-get install -y build-essential
+          
+
+      - name: Build binary
+        run: |
+          # Replace with your actual build command
+          make all
+          mkdir -p release
+          cp bin/gows release/${{ matrix.binary_name }}
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: binary-${{ matrix.platform }}
+          path: release/${{ matrix.binary_name }}
+
+  collect-proto:
+    name: Collect Proto Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Gather proto files
+        run: |
+          mkdir -p proto
+          cp ${{ env.PROTO_SRC_DIR }}/*.proto proto/
+
+      - name: Upload proto artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: proto
+          path: proto/
+
+  publish-release:
+    name: Publish Release
+    needs: [build-binaries, collect-proto]
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.sha }}
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Setup GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
+        run: |
+          gh auth login --with-token <<< "$GH_TOKEN"
+          gh config set prompt disabled
+
+      - name: Delete existing release if present
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$TARGET_REPO"; then
+            gh release delete "$RELEASE_TAG" --repo "$TARGET_REPO" -y
+          fi
+        continue-on-error: true
+
+      - name: Create new release
+        run: |
+          gh release create "$RELEASE_TAG" \
+            --repo "$TARGET_REPO" \
+            --title "Build ${GITHUB_SHA:0:7}" \
+            --notes "Automated release for commit ${{ github.sha }}"
+
+      - name: Upload release assets
+        run: |
+          find artifacts -type f -print0 | while IFS= read -r -d '' file; do
+            gh release upload "$RELEASE_TAG" \
+              --repo "$TARGET_REPO" \
+              --clobber \
+              "$file"
+          done
