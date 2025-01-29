@@ -2,8 +2,9 @@ name: Release Build and Publish
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - master
+      - dev
 
 env:
   TARGET_REPO: devlikeapro/gows
@@ -31,7 +32,7 @@ jobs:
         run: |
           # Add any required build environment setup here
           sudo apt-get update && sudo apt-get install -y build-essential
-          
+
 
       - name: Build binary
         run: |
@@ -66,7 +67,7 @@ jobs:
 
   publish-release:
     name: Publish Release
-    needs: [build-binaries, collect-proto]
+    needs: [ build-binaries, collect-proto ]
     runs-on: ubuntu-latest
     env:
       RELEASE_TAG: ${{ github.sha }}
