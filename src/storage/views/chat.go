@@ -30,9 +30,22 @@ func (s ChatView) GetChats(sortBy storage.Sort, pagination storage.Pagination) (
 	// ignore Name for now, only show Jid and ConversationTimestamp
 	chats := make([]*storage.StoredChat, len(messages))
 	for i, msg := range messages {
+		var name string
+		contact, err := s.Contacts.GetContact(msg.Info.Chat)
+		switch {
+		case err != nil:
+			name = ""
+		case contact == nil:
+			name = ""
+		case contact.Name != "":
+			name = contact.Name
+		case contact.PushName != "":
+			name = contact.PushName
+		}
 		chat := &storage.StoredChat{
 			Jid:                   msg.Info.Chat,
 			ConversationTimestamp: msg.Info.Timestamp,
+			Name:                  name,
 		}
 		chats[i] = chat
 	}
