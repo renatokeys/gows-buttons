@@ -99,13 +99,6 @@ jobs:
           gh auth login --with-token <<< "$CLI_GH_TOKEN"
           gh config set prompt disabled
 
-      - name: Delete existing release if present
-        run: |
-          if gh release view "$RELEASE_TAG" --repo "$TARGET_REPO"; then
-            gh release delete "$RELEASE_TAG" --repo "$TARGET_REPO" -y
-          fi
-        continue-on-error: true
-
       - name: Create new release
         run: |
           gh release create "$RELEASE_TAG" \
