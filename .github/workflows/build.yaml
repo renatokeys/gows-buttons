@@ -84,7 +84,7 @@ jobs:
     needs: [ build-binaries, collect-proto ]
     runs-on: ubuntu-latest
     env:
-      RELEASE_TAG: r${{ github.sha }}
+      RELEASE_TAG: v.${{ github.sha }}
 
     steps:
       - name: Download all artifacts
@@ -103,7 +103,7 @@ jobs:
         run: |
           gh release create "$RELEASE_TAG" \
             --repo "$TARGET_REPO" \
-            --title "Build ${GITHUB_SHA:0:7}" \
+            --title "v.${GITHUB_SHA:0:7}" \
             --notes "Automated release for commit ${{ github.sha }}"
 
       - name: Upload release assets
