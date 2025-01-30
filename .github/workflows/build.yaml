@@ -36,10 +36,11 @@ jobs:
       - name: Copy binary to release directory
         run: |
           docker create --name temp-gows gows
-          docker cp temp-gows:/release/gows ./gows
+          mkdir -p .bin
+          docker cp temp-gows:/release/gows ./.bin/gows
           docker rm temp-gows
           mkdir -p release
-          mv gows release/${{ matrix.binary_name }}
+          mv ./.bin/gows release/${{ matrix.binary_name }}
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v3
