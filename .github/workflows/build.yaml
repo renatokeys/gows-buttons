@@ -29,36 +29,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup build environment
+      - name: Build
         run: |
-          sudo apt-get update 
-          sudo apt-get install -y build-essential
-          sudo apt-get install -y protobuf-compiler
-          sudo apt-get install -y libvips-dev
+          docker build -t gows .
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - run: go version
-
-      - name: go install deps
+      - name: Copy binary to release directory
         run: |
-          cd src
-          go mod download
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-
-      - name: Build binary
-        run: |
-          # Replace with your actual build command
-          export GOPATH=$HOME/go
-          export PATH=$PATH:$GOPATH/bin
-          export PATH=$PATH:/usr/local/go/bin
-          make all
-          mkdir -p release
-          cp bin/gows release/${{ matrix.binary_name }}
+          docker create --name temp-gows gows
+          docker cp temp-gows:/release/gows ./gows
+          docker rm temp-gows
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v3
