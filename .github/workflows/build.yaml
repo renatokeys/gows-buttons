@@ -84,7 +84,7 @@ jobs:
     needs: [ build-binaries, collect-proto ]
     runs-on: ubuntu-latest
     env:
-      RELEASE_TAG: ${{ github.sha }}
+      RELEASE_TAG: r${{ github.sha }}
 
     steps:
       - name: Download all artifacts
