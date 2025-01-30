@@ -103,7 +103,7 @@ jobs:
         run: |
           gh release create "$RELEASE_TAG" \
             --repo "$TARGET_REPO" \
-            --title "v.${GITHUB_SHA:0:7}" \
+            --title "$RELEASE_TAG" \
             --notes "Automated release for commit ${{ github.sha }}"
 
       - name: Upload release assets
