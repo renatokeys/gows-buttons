@@ -43,7 +43,7 @@ jobs:
           mv ./.bin/gows release/${{ matrix.binary_name }}
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binary-${{ matrix.platform }}
           path: release/${{ matrix.binary_name }}
