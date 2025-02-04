@@ -1,7 +1,6 @@
 package sqlstorage
 
 import (
-	"encoding/json"
 	"errors"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/devlikeapro/gows/storage"
@@ -119,7 +118,7 @@ func (kv *EntityRepository[Entity]) Retrieve(sql sq.SelectBuilder, pagination st
 	}
 	for _, d := range data {
 		var entity Entity
-		err = json.Unmarshal([]byte(d), &entity)
+		err = kv.mapper.Unmarshal([]byte(d), &entity)
 		if err != nil {
 			return nil, err
 		}

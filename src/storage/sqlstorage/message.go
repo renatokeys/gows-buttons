@@ -1,7 +1,6 @@
 package sqlstorage
 
 import (
-	"encoding/json"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/devlikeapro/gows/storage"
@@ -10,25 +9,6 @@ import (
 
 type SqlMessageStore struct {
 	*EntityRepository[storage.StoredMessage]
-}
-
-type MessageMapper struct {
-}
-
-func (f *MessageMapper) ToFields(entity *storage.StoredMessage) map[string]interface{} {
-	return map[string]interface{}{
-		"id":        entity.Info.ID,
-		"jid":       entity.Info.Chat,
-		"from_me":   entity.Info.IsFromMe,
-		"timestamp": entity.Info.Timestamp,
-	}
-}
-func (f *MessageMapper) Marshal(entity *storage.StoredMessage) ([]byte, error) {
-	return json.Marshal(entity)
-}
-
-func (f *MessageMapper) Unmarshal(data []byte, entity *storage.StoredMessage) error {
-	return json.Unmarshal(data, entity)
 }
 
 var _ storage.MessageStorage = (*SqlMessageStore)(nil)
