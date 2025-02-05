@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/devlikeapro/gows/gows"
 	__ "github.com/devlikeapro/gows/proto"
 	"go.mau.fi/whatsmeow"
@@ -28,14 +29,15 @@ func toNewsletter(n *types.NewsletterMetadata) *__.Newsletter {
 		role = string(n.ViewerMeta.Role)
 	}
 	return &__.Newsletter{
-		Id:          n.ID.String(),
-		Name:        n.ThreadMeta.Name.Text,
-		Description: n.ThreadMeta.Description.Text,
-		Invite:      n.ThreadMeta.InviteCode,
-		Picture:     picture,
-		Preview:     preview,
-		Verified:    n.ThreadMeta.VerificationState == types.NewsletterVerificationStateVerified,
-		Role:        role,
+		Id:              n.ID.String(),
+		Name:            n.ThreadMeta.Name.Text,
+		Description:     n.ThreadMeta.Description.Text,
+		Invite:          n.ThreadMeta.InviteCode,
+		Picture:         picture,
+		Preview:         preview,
+		Verified:        n.ThreadMeta.VerificationState == types.NewsletterVerificationStateVerified,
+		Role:            role,
+		SubscriberCount: int64(n.ThreadMeta.SubscriberCount),
 	}
 }
 
@@ -50,14 +52,6 @@ func (s *Server) GetSubscribedNewsletters(ctx context.Context, req *__.Newslette
 	}
 	list := make([]*__.Newsletter, len(resp))
 	for i, n := range resp {
-		picture := n.ThreadMeta.Picture.URL
-		if picture == "" {
-			picture = n.ThreadMeta.Picture.DirectPath
-		}
-		preview := n.ThreadMeta.Preview.URL
-		if preview == "" {
-			preview = n.ThreadMeta.Preview.DirectPath
-		}
 		list[i] = toNewsletter(n)
 	}
 	return &__.NewsletterList{Newsletters: list}, nil
@@ -144,4 +138,87 @@ func (s *Server) NewsletterToggleFollow(ctx context.Context, req *__.NewsletterT
 		return nil, err
 	}
 	return &__.Empty{}, nil
+}
+
+func (s *Server) GetNewsletterMessagesByInvite(ctx context.Context, req *__.GetNewsletterMessagesByInviteRequest) (*__.Json, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+	code := req.Invite
+	params := &gows.GetNewsletterMessagesByInviteParams{
+		Count: int(req.Limit),
+	}
+	newsletterMessages, err := cli.GetNewsletterMessagesByInvite(code, params)
+	if err != nil {
+		return nil, fmt.Errorf("error getting messages: %w", err)
+	}
+	response, err := toJson(newsletterMessages)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling messages: %w", err)
+	}
+	return response, nil
+}
+
+func (s *Server) SearchNewslettersByView(ctx context.Context, req *__.SearchNewslettersByViewRequest) (*__.NewsletterSearchPageResult, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	params := gows.SearchNewsletterByViewParams{
+		Page: gows.SearchPageParams{
+			Count:       int(req.Page.Limit),
+			StartCursor: req.Page.StartCursor,
+		},
+		View:       req.View,
+		Categories: req.Categories,
+		Countries:  req.Countries,
+	}
+	resp, err := cli.SearchNewsletterByView(params)
+	if err != nil {
+		return nil, fmt.Errorf("error searching newsletters: %w", err)
+	}
+	result := searchResultToGrpcResponse(resp)
+	return result, nil
+}
+
+func searchResultToGrpcResponse(resp *gows.SearchNewsletterResult) *__.NewsletterSearchPageResult {
+	newsletters := make([]*__.Newsletter, len(resp.Newsletters))
+	for i, n := range resp.Newsletters {
+		newsletters[i] = toNewsletter(n)
+	}
+	page := &__.SearchPageResult{
+		StartCursor:     resp.Page.StartCursor,
+		EndCursor:       resp.Page.EndCursor,
+		HasNextPage:     resp.Page.HasNextPage,
+		HasPreviousPage: resp.Page.HasPreviousPage,
+	}
+	result := &__.NewsletterSearchPageResult{
+		Newsletters: &__.NewsletterList{Newsletters: newsletters},
+		Page:        page,
+	}
+	return result
+}
+
+func (s *Server) SearchNewslettersByText(ctx context.Context, req *__.SearchNewslettersByTextRequest) (*__.NewsletterSearchPageResult, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	params := gows.SearchNewsletterByTextParams{
+		Page: gows.SearchPageParams{
+			Count:       int(req.Page.Limit),
+			StartCursor: req.Page.StartCursor,
+		},
+		Text:       req.Text,
+		Categories: req.Categories,
+	}
+	resp, err := cli.SearchNewsletterByText(params)
+	if err != nil {
+		return nil, fmt.Errorf("error searching newsletters: %w", err)
+	}
+	result := searchResultToGrpcResponse(resp)
+	return result, nil
 }

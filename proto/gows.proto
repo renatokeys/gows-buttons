@@ -59,6 +59,9 @@ service MessageService {
   //
   rpc GetSubscribedNewsletters(NewsletterListRequest) returns (NewsletterList);
   rpc GetNewsletterInfo(NewsletterInfoRequest) returns (Newsletter);
+  rpc GetNewsletterMessagesByInvite(GetNewsletterMessagesByInviteRequest) returns (Json);
+  rpc SearchNewslettersByView(SearchNewslettersByViewRequest) returns (NewsletterSearchPageResult);
+  rpc SearchNewslettersByText(SearchNewslettersByTextRequest) returns (NewsletterSearchPageResult);
   rpc CreateNewsletter(CreateNewsletterRequest) returns (Newsletter);
   rpc NewsletterToggleMute(NewsletterToggleMuteRequest) returns (Empty);
   rpc NewsletterToggleFollow(NewsletterToggleFollowRequest) returns (Empty);
@@ -259,6 +262,7 @@ message Newsletter {
   string picture = 5;
   bool verified = 7;
   string role = 8;
+  int64 subscriberCount = 9;
 }
 
 message NewsletterList {
@@ -268,6 +272,43 @@ message NewsletterList {
 message NewsletterInfoRequest {
   Session session = 1;
   string id = 2;
+}
+
+message GetNewsletterMessagesByInviteRequest {
+  Session session = 1;
+  string invite = 2;
+  int64 limit = 3;
+}
+
+message SearchPage {
+  uint64 limit = 2;
+  string startCursor = 3;
+}
+
+message SearchNewslettersByViewRequest {
+  Session session = 1;
+  SearchPage page = 2;
+  string view = 3;
+  repeated string categories = 4;
+  repeated string countries = 5;
+}
+
+message SearchNewslettersByTextRequest {
+  Session session = 1;
+  SearchPage page = 2;
+  string text = 3;
+  repeated string categories = 4;
+}
+message SearchPageResult {
+  string startCursor = 1;
+  string endCursor = 2;
+  bool hasNextPage = 3;
+  bool hasPreviousPage = 4;
+}
+
+message NewsletterSearchPageResult {
+  SearchPageResult page = 1;
+  NewsletterList newsletters = 2;
 }
 
 message CreateNewsletterRequest {
