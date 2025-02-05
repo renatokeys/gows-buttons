@@ -63,24 +63,22 @@ func (s *Server) GetSubscribedNewsletters(ctx context.Context, req *__.Newslette
 	return &__.NewsletterList{Newsletters: list}, nil
 }
 
-func (s *Server) GetNewsletterInfo(ctx context.Context, req *__.NewsletterInfoRequest) (*__.Newsletter, error) {
+func (s *Server) GetNewsletterInfo(ctx context.Context, req *__.NewsletterInfoRequest) (result *__.Newsletter, err error) {
 	cli, err := s.Sm.Get(req.GetSession().GetId())
 	if err != nil {
 		return nil, err
 	}
 	id := req.GetId()
+	var resp *types.NewsletterMetadata
 	if gows.HasNewsletterSuffix(id) {
 		jid, err := types.ParseJID(id)
 		if err != nil {
 			return nil, err
 		}
-		resp, err := cli.GetNewsletterInfo(jid)
-		if err != nil {
-			return nil, err
-		}
-		return toNewsletter(resp), nil
+		resp, err = cli.GetNewsletterInfo(jid)
+	} else {
+		resp, err = cli.GetNewsletterInfoWithInvite(id)
 	}
-	resp, err := cli.GetNewsletterInfoWithInvite(id)
 	if err != nil {
 		return nil, err
 	}
