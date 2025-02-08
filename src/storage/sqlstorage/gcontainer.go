@@ -73,5 +73,7 @@ func configurePsql(db *sqlx.DB) (err error) {
 	// Limit the number of open connections to prevent "too many clients" errors
 	// We save history messages in the database in parallel, so we need to limit the number of connections
 	db.SetMaxOpenConns(10)
+	// Close idle connections after 30 seconds
+	db.SetConnMaxIdleTime(30)
 	return nil
 }
