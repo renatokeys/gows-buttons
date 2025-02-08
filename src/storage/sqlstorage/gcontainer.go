@@ -18,8 +18,15 @@ func New(dialect, address string, log waLog.Logger) (*GContainer, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
-	if dialect == "sqlite3" || dialect == "sqlite" {
+	switch {
+	case dialect == "sqlite3" || dialect == "sqlite":
 		err = configureSqlite3(db)
+		if err != nil {
+			defer db.Close()
+			return nil, err
+		}
+	case dialect == "postgres":
+		err = configurePsql(db)
 		if err != nil {
 			defer db.Close()
 			return nil, err
@@ -59,5 +66,12 @@ func configureSqlite3(db *sqlx.DB) (err error) {
 	// DO NOT add cache=shared, it's not safe
 	// db.SetMaxOpenConns(1)
 
+	return nil
+}
+
+func configurePsql(db *sqlx.DB) (err error) {
+	// Limit the number of open connections to prevent "too many clients" errors
+	// We save history messages in the database in parallel, so we need to limit the number of connections
+	db.SetMaxOpenConns(10)
 	return nil
 }
