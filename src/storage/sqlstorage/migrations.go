@@ -1,6 +1,7 @@
 package sqlstorage
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
@@ -28,19 +29,28 @@ func (c *GContainer) Migrate() error {
 		return fmt.Errorf("failed to create migration source: %w", err)
 	}
 	var driver database.Driver
-
 	switch {
 	case c.dialect == "sqlite3" || c.dialect == "sqlite":
 		driver, err = sqlite3.WithInstance(c.db.DB, &sqlite3.Config{
 			MigrationsTable: MigrationsTable,
 		})
 	case c.dialect == "postgres":
-		driver, err = postgres.WithInstance(c.db.DB, &postgres.Config{
-			MigrationsTable: MigrationsTable,
-		})
+		// Create a new connection to the database
+		// We need to Close it after the migration is done
+		// Otherwise, the connection will hang until the program exits
+		// "SELECT pg_advisory_unlock($1)"
+		conn, err := c.db.Connx(context.Background())
+		if err != nil {
+			return fmt.Errorf("failed to get database connection: %w", err)
+		}
+		driver, err = postgres.WithConnection(
+			context.Background(),
+			conn.Conn,
+			&postgres.Config{
+				MigrationsTable: MigrationsTable,
+			})
+		defer driver.Close()
 	}
-	// Do not close the driver, we don't own it
-	//defer driver.Close()
 
 	if err != nil {
 		return fmt.Errorf("failed to create database driver: %w", err)
