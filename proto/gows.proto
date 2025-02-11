@@ -44,6 +44,12 @@ service MessageService {
   rpc RequestCode(PairCodeRequest) returns (PairCodeResponse);
   rpc Logout(Session) returns (Empty);
   //
+  // Profile
+  //
+  rpc SetProfileName(ProfileNameRequest) returns (Empty);
+  rpc SetProfileStatus(ProfileStatusRequest) returns (Empty);
+  rpc SetProfilePicture(SetProfilePictureRequest) returns (Empty);
+  //
   // Actions
   //
   rpc SendMessage (MessageRequest) returns (MessageResponse);
@@ -137,6 +143,25 @@ message SessionStateResponse {
 message Session {
   string id = 1;
 }
+
+//
+// Profile
+//
+message ProfileNameRequest {
+  Session session = 1;
+  string name = 2;
+}
+
+message ProfileStatusRequest {
+  Session session = 1;
+  string status = 2;
+}
+
+message SetProfilePictureRequest {
+  Session session = 1;
+  bytes picture = 2;
+}
+
 
 //
 // Actions
