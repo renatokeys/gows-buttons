@@ -50,6 +50,10 @@ service MessageService {
   rpc SetProfileStatus(ProfileStatusRequest) returns (Empty);
   rpc SetProfilePicture(SetProfilePictureRequest) returns (Empty);
   //
+  // Groups
+  //
+  rpc SetGroupPicture(SetPictureRequest) returns (Empty);
+  //
   // Actions
   //
   rpc SendMessage (MessageRequest) returns (MessageResponse);
@@ -160,6 +164,12 @@ message ProfileStatusRequest {
 message SetProfilePictureRequest {
   Session session = 1;
   bytes picture = 2;
+}
+
+message SetPictureRequest {
+  Session session = 1;
+  string jid = 2;
+  bytes picture = 3;
 }
 
 
