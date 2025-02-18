@@ -22,6 +22,27 @@ message OptionalBool {
 }
 
 //
+// Session + Jid shortcuts
+//
+message JidRequest {
+  Session session = 1;
+  string jid = 2;
+}
+
+message JidStringRequest {
+  Session session = 1;
+  string jid = 2;
+  string value = 3;
+}
+
+message JidBoolRequest {
+  Session session = 1;
+  string jid = 2;
+  bool value = 3;
+}
+
+
+//
 // Events
 //
 service EventStream {
@@ -49,10 +70,25 @@ service MessageService {
   rpc SetProfileName(ProfileNameRequest) returns (Empty);
   rpc SetProfileStatus(ProfileStatusRequest) returns (Empty);
   rpc SetProfilePicture(SetProfilePictureRequest) returns (Empty);
+
   //
   // Groups
   //
+  rpc GetGroups(Session) returns (JsonList);
+  rpc GetGroupInfo(JidRequest) returns (Json);
+  rpc CreateGroup(CreateGroupRequest) returns (Json);
+  rpc LeaveGroup(JidRequest) returns (Empty);
+  rpc GetGroupInviteLink(JidRequest) returns (OptionalString);
+  rpc RevokeGroupInviteLink(JidRequest) returns (OptionalString);
+  rpc GetGroupInfoFromLink(GroupCodeRequest) returns (Json);
+  rpc JoinGroupWithLink(GroupCodeRequest) returns (Json);
+  rpc SetGroupName(JidStringRequest) returns (Empty);
+  rpc SetGroupDescription(JidStringRequest) returns (Empty);
   rpc SetGroupPicture(SetPictureRequest) returns (Empty);
+  rpc SetGroupLocked(JidBoolRequest) returns (Empty); // change info only by admins
+  rpc SetGroupAnnounce(JidBoolRequest) returns (Empty); // send messages only by admins
+  rpc UpdateGroupParticipants(UpdateParticipantsRequest) returns (JsonList);
+
   //
   // Actions
   //
@@ -64,6 +100,7 @@ service MessageService {
   rpc SubscribePresence(SubscribePresenceRequest) returns (Empty);
   rpc MarkRead(MarkReadRequest) returns (Empty);
   rpc CheckPhones(CheckPhonesRequest) returns (CheckPhonesResponse);
+
   //
   // Newsletters
   //
@@ -166,10 +203,34 @@ message SetProfilePictureRequest {
   bytes picture = 2;
 }
 
+message CreateGroupRequest {
+  Session session = 1;
+  string name = 2;
+  repeated string participants = 3;
+}
+
 message SetPictureRequest {
   Session session = 1;
   string jid = 2;
   bytes picture = 3;
+}
+
+enum ParticipantAction {
+  ADD = 0;
+  REMOVE = 1;
+  PROMOTE = 2;
+  DEMOTE = 3;
+}
+
+message UpdateParticipantsRequest {
+  Session session = 1;
+  string jid = 2;
+  repeated string participants = 3;
+  ParticipantAction action = 4;
+}
+message GroupCodeRequest {
+  Session session = 1;
+  string code = 2;
 }
 
 
