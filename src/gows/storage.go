@@ -15,6 +15,13 @@ type GOWSStorage struct {
 	storage *storage.Storage
 }
 
+func (st *GOWSStorage) GetCachedGroupStorage() storage.GroupStorage {
+	return NewGroupCacheStorage(
+		st.storage.Groups,
+		st.gows,
+	)
+}
+
 func shouldStoreMessage(event *events.Message) bool {
 	if event.Message == nil {
 		return false
@@ -82,6 +89,16 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 		st.handleReceipt(event.(*events.Receipt))
 	case *events.HistorySync:
 		st.handleHistorySync(event.(*events.HistorySync))
+	// Groups
+	case *events.JoinedGroup:
+		st.handleMeJoinedGroup(event.(*events.JoinedGroup))
+	case *events.GroupInfo:
+		left := st.handleMeLeftGroup(event.(*events.GroupInfo))
+		if left {
+			return
+		}
+		st.handleGroupInfo(event.(*events.GroupInfo))
+		st.handleGroupParticipantsChange(event.(*events.GroupInfo))
 	}
 }
 
@@ -165,4 +182,37 @@ func (st *GOWSStorage) saveHistoryForOneChat(conv *waHistorySync.Conversation, c
 		st.handleMessageEvent(evt)
 	}
 	st.log.Debugf("Saved %v messages in %v", len(conv.GetMessages()), chatJID)
+}
+
+func (st *GOWSStorage) handleMeJoinedGroup(group *events.JoinedGroup) {
+	err := st.storage.Groups.UpsertOneGroup(&group.GroupInfo)
+	if err != nil {
+		st.log.Errorf("Error storing group %v: %v", group.JID, err)
+	}
+	st.log.Debugf("I joined group %v", group.JID)
+}
+
+func (st *GOWSStorage) handleMeLeftGroup(info *events.GroupInfo) bool {
+	jid := st.gows.Store.ID
+	for _, leave := range info.Leave {
+		if leave == jid.ToNonAD() {
+			st.log.Debugf("I left group %v", info.JID)
+			err := st.storage.Groups.DeleteGroup(info.JID)
+			if err != nil {
+				st.log.Errorf("Error deleting group %v: %v", info.JID, err)
+			}
+			return true
+		}
+	}
+	return false
+}
+
+func (st *GOWSStorage) handleGroupInfo(info *events.GroupInfo) {
+	return
+}
+
+func (st *GOWSStorage) handleGroupParticipantsChange(info *events.GroupInfo) {
+	if (len(info.Join) + len(info.Leave) + len(info.Promote) + len(info.Demote)) == 0 {
+		return
+	}
 }

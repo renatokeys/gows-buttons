@@ -26,3 +26,20 @@ var MessageTable = Table{
 		"data",
 	},
 }
+
+var GroupTable = Table{
+	Name: "gows_groups",
+	Columns: []string{
+		"id",
+		"name",
+		"data",
+	},
+	DataField: "data",
+	OnConflict: []string{
+		"id",
+	},
+	UpdateOnConflict: []string{
+		"name",
+		"data",
+	},
+}

@@ -158,3 +158,8 @@ func (kv *EntityRepository[Entity]) DeleteBy(conditions []sq.Sqlizer) error {
 func (kv *EntityRepository[Entity]) DeleteById(id string) error {
 	return kv.DeleteBy([]sq.Sqlizer{sq.Eq{"id": id}})
 }
+
+func (kv *EntityRepository[Entity]) DeleteAll() error {
+	conditions := make([]sq.Sqlizer, 0)
+	return kv.DeleteBy(conditions)
+}

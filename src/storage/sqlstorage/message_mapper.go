@@ -9,17 +9,6 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type JsonMapper struct {
-}
-
-func (f *JsonMapper) Marshal(entity *storage.StoredMessage) ([]byte, error) {
-	return json.Marshal(entity)
-}
-
-func (f *JsonMapper) Unmarshal(data []byte, entity *storage.StoredMessage) error {
-	return json.Unmarshal(data, entity)
-}
-
 func isNullJson(data []byte) bool {
 	if len(data) != 4 {
 		return false
@@ -30,6 +19,8 @@ func isNullJson(data []byte) bool {
 
 type MessageMapper struct {
 }
+
+var _ Mapper[storage.StoredMessage] = (*MessageMapper)(nil)
 
 func (f *MessageMapper) ToFields(entity *storage.StoredMessage) map[string]interface{} {
 	return map[string]interface{}{

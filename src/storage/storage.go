@@ -26,6 +26,7 @@ type Storage struct {
 	Messages MessageStorage
 	Contacts ContactStorage
 	Chats    ChatStorage
+	Groups   GroupStorage
 }
 
 type MessageFilter struct {
@@ -43,6 +44,15 @@ type MessageStorage interface {
 	GetMessage(id types.MessageID) (*StoredMessage, error)
 	DeleteChatMessages(jid types.JID) error
 	DeleteMessage(id types.MessageID) error
+}
+
+type GroupStorage interface {
+	FetchGroups() error
+	UpsertOneGroup(group *types.GroupInfo) error
+	GetAllGroups(sort Sort, pagination Pagination) ([]*types.GroupInfo, error)
+	GetGroup(jid types.JID) (*types.GroupInfo, error)
+	DeleteGroup(jid types.JID) error
+	DeleteGroups() error
 }
 
 type ContactStorage interface {

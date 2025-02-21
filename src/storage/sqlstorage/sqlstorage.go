@@ -7,5 +7,6 @@ import (
 func (gc *GContainer) NewStorage() *storage.Storage {
 	return &storage.Storage{
 		Messages: gc.NewMessageStorage(),
+		Groups:   gc.NewGroupStorage(),
 	}
 }

@@ -60,6 +60,7 @@ func (gows *GoWS) Start() error {
 		log:     gows.Log.Sub("Storage"),
 		storage: gows.Storage,
 	}
+	gows.Storage.Groups = gows.st.GetCachedGroupStorage()
 	gows.AddEventHandler(gows.handleEvent)
 
 	// Not connected, listen for QR code events

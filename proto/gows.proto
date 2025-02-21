@@ -74,6 +74,7 @@ service MessageService {
   //
   // Groups
   //
+  rpc FetchGroups(Session) returns (Empty);
   rpc GetGroups(Session) returns (JsonList);
   rpc GetGroupInfo(JidRequest) returns (Json);
   rpc CreateGroup(CreateGroupRequest) returns (Json);

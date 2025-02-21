@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/devlikeapro/gows/media"
 	__ "github.com/devlikeapro/gows/proto"
+	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 )
@@ -14,11 +15,24 @@ func (s *Server) GetGroups(ctx context.Context, req *__.Session) (*__.JsonList, 
 	if err != nil {
 		return nil, err
 	}
-	groups, err := cli.GetJoinedGroups()
+	sort := storage.Sort{Field: "jid", Order: storage.SortAsc}
+	groups, err := cli.Storage.Groups.GetAllGroups(sort, storage.Pagination{})
 	if err != nil {
 		return nil, err
 	}
 	return toJsonList(groups)
+}
+
+func (s *Server) FetchGroups(ctx context.Context, req *__.Session) (*__.Empty, error) {
+	cli, err := s.Sm.Get(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	err = cli.Storage.Groups.FetchGroups()
+	if err != nil {
+		return nil, err
+	}
+	return &__.Empty{}, nil
 }
 
 func (s *Server) GetGroupInfo(ctx context.Context, req *__.JidRequest) (*__.Json, error) {
@@ -30,7 +44,7 @@ func (s *Server) GetGroupInfo(ctx context.Context, req *__.JidRequest) (*__.Json
 	if err != nil {
 		return nil, err
 	}
-	info, err := cli.GetGroupInfo(jid)
+	info, err := cli.Storage.Groups.GetGroup(jid)
 	if err != nil {
 		return nil, err
 	}
