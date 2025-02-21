@@ -135,8 +135,8 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 			st.log.Errorf("Error updating status for message %v(%v): %v", event.Chat, id, err)
 			continue
 		}
+		st.log.Debugf("Updated status for message %v(%v) to %v", event.Chat, id, status)
 	}
-	st.log.Debugf("Updated status for %v messages in %v to %v", len(event.MessageIDs), event.Chat, status)
 }
 
 func (st *GOWSStorage) handleHistorySync(event *events.HistorySync) {

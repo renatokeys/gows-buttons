@@ -3,6 +3,7 @@ package sqlstorage
 import (
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/avast/retry-go"
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/types"
 )
@@ -57,8 +58,18 @@ func (s SqlMessageStore) GetChatMessages(jid types.JID, filters storage.MessageF
 	return s.GetAllMessages(filters, pagination)
 }
 
-func (s SqlMessageStore) GetMessage(id types.MessageID) (*storage.StoredMessage, error) {
-	return s.GetById(id)
+func (s SqlMessageStore) GetMessage(id types.MessageID) (msg *storage.StoredMessage, err error) {
+	err = retry.Do(
+		func() error {
+			msg, err = s.GetById(id)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+		retry.Attempts(6),
+	)
+	return msg, err
 }
 
 func (s SqlMessageStore) DeleteChatMessages(jid types.JID) error {
