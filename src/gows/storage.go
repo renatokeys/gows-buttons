@@ -119,8 +119,12 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 		status = storage.StatusRead
 	case types.ReceiptTypePlayed:
 		status = storage.StatusPlayed
+	default:
+		st.log.Debugf("Unknown receipt type: %v", event.Type)
+		return
 	}
 	for _, id := range event.MessageIDs {
+		st.log.Debugf("Updating status for message %v(%v) to %v (receipt type: '%v')", event.Chat, id, status, event.Type)
 		msg, err := st.storage.Messages.GetMessage(id)
 		if err != nil {
 			st.log.Errorf("Error getting message %v(%v): %v", event.Chat, id, err)
