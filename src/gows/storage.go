@@ -1,6 +1,7 @@
 package gows
 
 import (
+	"github.com/avast/retry-go"
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/proto/waHistorySync"
 	"go.mau.fi/whatsmeow/types"
@@ -98,7 +99,6 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 			return
 		}
 		st.handleGroupInfo(event.(*events.GroupInfo))
-		st.handleGroupParticipantsChange(event.(*events.GroupInfo))
 	}
 }
 
@@ -208,11 +208,11 @@ func (st *GOWSStorage) handleMeLeftGroup(info *events.GroupInfo) bool {
 }
 
 func (st *GOWSStorage) handleGroupInfo(info *events.GroupInfo) {
-	return
-}
-
-func (st *GOWSStorage) handleGroupParticipantsChange(info *events.GroupInfo) {
-	if (len(info.Join) + len(info.Leave) + len(info.Promote) + len(info.Demote)) == 0 {
-		return
+	err := retry.Do(func() error {
+		return st.storage.Groups.UpdateGroup(info)
+	})
+	if err != nil {
+		st.log.Errorf("Error updating group %v: %v", info.JID, err)
 	}
+	return
 }

@@ -2,6 +2,7 @@ package storage
 
 import (
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 	"time"
 )
 
@@ -48,6 +49,7 @@ type MessageStorage interface {
 
 type GroupStorage interface {
 	FetchGroups() error
+	UpdateGroup(update *events.GroupInfo) error
 	UpsertOneGroup(group *types.GroupInfo) error
 	GetAllGroups(sort Sort, pagination Pagination) ([]*types.GroupInfo, error)
 	GetGroup(jid types.JID) (*types.GroupInfo, error)

@@ -3,6 +3,7 @@ package gows
 import (
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 	"sync"
 	"time"
@@ -15,7 +16,7 @@ type GroupCacheStorage struct {
 	gows   *GoWS
 
 	lastTimeRefreshed time.Time
-	refreshLock       sync.Mutex
+	lock              sync.Mutex
 
 	log waLog.Logger
 }
@@ -35,10 +36,33 @@ func (g *GroupCacheStorage) shouldRefresh() bool {
 }
 
 func (g *GroupCacheStorage) FetchGroups() error {
-	g.refreshLock.Lock()
-	defer g.refreshLock.Unlock()
+	g.lock.Lock()
+	defer g.lock.Unlock()
 	return g.fetchGroupsUnlocked()
 }
+
+func (g *GroupCacheStorage) UpdateGroup(update *events.GroupInfo) (err error) {
+	g.lock.Lock()
+	defer g.lock.Unlock()
+	refreshed, err := g.fetchGroupsIfNeeded(false)
+	if err != nil {
+		return err
+	}
+	if refreshed {
+		g.log.Debugf("Groups refreshed, skipping update of %s", update.JID)
+		return nil
+	}
+	group, err := g.groups.GetGroup(update.JID)
+	if err != nil {
+		return err
+	}
+	err = storage.UpdateGroupInfo(group, update)
+	if err != nil {
+		return err
+	}
+	return g.groups.UpsertOneGroup(group)
+}
+
 func (g *GroupCacheStorage) fetchGroupsUnlocked() error {
 	g.log.Debugf("Refreshing groups")
 	groups, err := g.gows.GetJoinedGroups()
@@ -61,14 +85,16 @@ func (g *GroupCacheStorage) fetchGroupsUnlocked() error {
 
 }
 
-func (g *GroupCacheStorage) fetchGroupsIfNeeded() error {
-	g.refreshLock.Lock()
-	defer g.refreshLock.Unlock()
+func (g *GroupCacheStorage) fetchGroupsIfNeeded(lock bool) (bool, error) {
+	if lock {
+		g.lock.Lock()
+		defer g.lock.Unlock()
+	}
 	if g.shouldRefresh() {
 		g.log.Debugf("Last time refreshed groups %s ago", time.Since(g.lastTimeRefreshed))
-		return g.fetchGroupsUnlocked()
+		return true, g.fetchGroupsUnlocked()
 	}
-	return nil
+	return false, nil
 }
 
 func (g *GroupCacheStorage) UpsertOneGroup(group *types.GroupInfo) error {
@@ -76,7 +102,7 @@ func (g *GroupCacheStorage) UpsertOneGroup(group *types.GroupInfo) error {
 }
 
 func (g *GroupCacheStorage) GetAllGroups(sort storage.Sort, pagination storage.Pagination) ([]*types.GroupInfo, error) {
-	err := g.fetchGroupsIfNeeded()
+	_, err := g.fetchGroupsIfNeeded(true)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +110,7 @@ func (g *GroupCacheStorage) GetAllGroups(sort storage.Sort, pagination storage.P
 }
 
 func (g *GroupCacheStorage) GetGroup(jid types.JID) (*types.GroupInfo, error) {
-	err := g.fetchGroupsIfNeeded()
+	_, err := g.fetchGroupsIfNeeded(true)
 	if err != nil {
 		return nil, err
 	}

@@ -3,9 +3,9 @@ package sqlstorage
 import (
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/avast/retry-go"
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 )
 
 func (gc *GContainer) NewGroupStorage() *SqlGroupStore {
@@ -29,6 +29,10 @@ func (s SqlGroupStore) FetchGroups() error {
 	return fmt.Errorf("not implemented, use GroupCacheStorage as a wrapper")
 }
 
+func (s SqlGroupStore) UpdateGroup(update *events.GroupInfo) error {
+	return fmt.Errorf("not implemented, use GroupCacheStorage as a wrapper")
+}
+
 func (s SqlGroupStore) UpsertOneGroup(group *types.GroupInfo) error {
 	return s.UpsertOne(group)
 }
@@ -42,17 +46,7 @@ func (s SqlGroupStore) GetAllGroups(sort storage.Sort, pagination storage.Pagina
 }
 
 func (s SqlGroupStore) GetGroup(jid types.JID) (group *types.GroupInfo, err error) {
-	err = retry.Do(
-		func() error {
-			group, err = s.GetById(jid.String())
-			if err != nil {
-				return err
-			}
-			return nil
-		},
-		retry.Attempts(6),
-	)
-	return group, err
+	return s.GetById(jid.String())
 }
 
 func (s SqlGroupStore) DeleteGroup(jid types.JID) error {

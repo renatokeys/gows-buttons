@@ -15,7 +15,7 @@ func (s *Server) GetGroups(ctx context.Context, req *__.Session) (*__.JsonList, 
 	if err != nil {
 		return nil, err
 	}
-	sort := storage.Sort{Field: "jid", Order: storage.SortAsc}
+	sort := storage.Sort{Field: "id", Order: storage.SortAsc}
 	groups, err := cli.Storage.Groups.GetAllGroups(sort, storage.Pagination{})
 	if err != nil {
 		return nil, err
