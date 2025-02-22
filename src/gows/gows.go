@@ -18,6 +18,7 @@ import (
 // GoWS it's Go WebSocket or WhatSapp ;)
 type GoWS struct {
 	*whatsmeow.Client
+	int     *whatsmeow.DangerousInternalClient
 	Context context.Context
 	Storage *storage.Storage
 
@@ -132,6 +133,7 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 	ctx, cancel := context.WithCancel(ctx)
 	gows := GoWS{
 		client,
+		client.DangerousInternals(),
 		ctx,
 		nil,
 		make(chan interface{}, 10),

@@ -41,9 +41,9 @@ func (cli *GoWS) GetNewsletterMessagesByInvite(code string, params *GetNewslette
 		}
 	}
 
-	resp, err := cli.SendIQ(whatsmeow.InfoQuery{
+	resp, err := cli.int.SendIQ(whatsmeow.DangerousInfoQuery{
 		Namespace: "newsletter",
-		Type:      whatsmeow.IqGet,
+		Type:      "get",
 		To:        types.ServerJID,
 		Content: []waBinary.Node{{
 			Tag:   "messages",
@@ -58,7 +58,7 @@ func (cli *GoWS) GetNewsletterMessagesByInvite(code string, params *GetNewslette
 	if !ok {
 		return nil, &whatsmeow.ElementMissingError{Tag: "messages", In: "newsletter messages response"}
 	}
-	messages := cli.ParseNewsletterMessages(&messagesNode)
+	messages := cli.int.ParseNewsletterMessages(&messagesNode)
 	messages = filterMessageNull(messages)
 	jid, ok := messagesNode.Attrs["jid"].(types.JID)
 	if !ok {
@@ -143,7 +143,7 @@ func (cli *GoWS) SearchNewsletterByView(query SearchNewsletterByViewParams) (*Se
 			"start_cursor": query.Page.StartCursor,
 		},
 	}
-	data, err := cli.SendMexIQ(context.TODO(), queryNewslettersDirectoryList, variables)
+	data, err := cli.int.SendMexIQ(context.TODO(), queryNewslettersDirectoryList, variables)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (cli *GoWS) SearchNewsletterByText(query SearchNewsletterByTextParams) (*Se
 			"start_cursor": query.Page.StartCursor,
 		},
 	}
-	data, err := cli.SendMexIQ(context.TODO(), queryNewslettersDirectorySearch, variables)
+	data, err := cli.int.SendMexIQ(context.TODO(), queryNewslettersDirectorySearch, variables)
 	if err != nil {
 		return nil, err
 	}
