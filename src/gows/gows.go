@@ -55,12 +55,6 @@ func (gows *GoWS) handleEvent(event interface{}) {
 }
 
 func (gows *GoWS) Start() error {
-	gows.st = &GOWSStorage{
-		gows:    gows,
-		log:     gows.Log.Sub("Storage"),
-		storage: gows.Storage,
-	}
-	gows.Storage.Groups = gows.st.GetCachedGroupStorage()
 	gows.AddEventHandler(gows.handleEvent)
 
 	// Not connected, listen for QR code events
@@ -147,8 +141,14 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 	}
 	storage := container.NewStorage()
 	storage.Contacts = meowstorage.NewContactStorage(gows.Store)
-	storage.Chats = views.NewChatView(storage.Messages, storage.Contacts)
 	gows.Storage = storage
+	gows.st = &GOWSStorage{
+		gows:    &gows,
+		log:     gows.Log.Sub("Storage"),
+		storage: gows.Storage,
+	}
+	gows.Storage.Groups = gows.st.GetCachedGroupStorage()
+	storage.Chats = views.NewChatView(storage.Messages, storage.Contacts, storage.Groups)
 	return &gows, nil
 }
 
