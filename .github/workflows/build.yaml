@@ -2,8 +2,8 @@ name: Release Build and Publish
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - '*'
 
 env:
   TARGET_REPO: devlikeapro/gows
@@ -65,7 +65,7 @@ jobs:
     needs: [ build-binaries, collect-proto ]
     runs-on: ubuntu-latest
     env:
-      RELEASE_TAG: v.${{ github.sha }}
+      RELEASE_TAG: ${{ github.ref_name }}
 
     steps:
       - name: Download all artifacts
@@ -84,8 +84,7 @@ jobs:
         run: |
           gh release create "$RELEASE_TAG" \
             --repo "$TARGET_REPO" \
-            --title "$RELEASE_TAG" \
-            --notes "Automated release for commit ${{ github.sha }}"
+            --title "$RELEASE_TAG"
 
       - name: Upload release assets
         run: |
