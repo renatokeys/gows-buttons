@@ -26,6 +26,9 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 	mediaResponse := whatsmeow.UploadResponse{}
 
 	if req.Media == nil {
+		//
+		// Status Text Message
+		//
 		var backgroundArgb *uint32
 		if req.BackgroundColor != nil {
 			backgroundArgb, err = media.ParseColor(req.BackgroundColor.Value)
@@ -33,7 +36,6 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 				return nil, err
 			}
 		}
-
 		var font *waE2E.ExtendedTextMessage_FontType
 		if req.Font != nil {
 			font = media.ParseFont(req.Font.Value)
@@ -44,6 +46,10 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 			BackgroundArgb: backgroundArgb,
 			Font:           font,
 		}
+		//
+		// Link Preview
+		//
+
 	} else {
 		var mediaType whatsmeow.MediaType
 		switch req.Media.Type {
