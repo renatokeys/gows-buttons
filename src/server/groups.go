@@ -60,7 +60,7 @@ func (s *Server) CreateGroup(ctx context.Context, req *__.CreateGroupRequest) (*
 	for ind, j := range req.Participants {
 		jid, err := types.ParseJID(j)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse JID at index %d (%d): %w", ind, j, err)
+			return nil, fmt.Errorf("failed to parse JID at index %d (%s): %w", ind, j, err)
 		}
 		jids = append(jids, jid)
 	}

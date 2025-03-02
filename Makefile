@@ -1,4 +1,8 @@
-all: clean build-proto build
+all: clean build-proto test build
+
+test:
+	cd src && \
+	go test ./...
 
 clean:
 	rm -rf src/proto
