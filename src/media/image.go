@@ -4,21 +4,46 @@ import (
 	"github.com/h2non/bimg"
 )
 
+type Size struct {
+	Width  uint32
+	Height uint32
+}
+
+var ThumbnailSize = Size{
+	Width:  72,
+	Height: 72,
+}
+
+var ProfilePictureSize = Size{
+	Width:  640,
+	Height: 640,
+}
+
+var PreviewLinkSize = Size{
+	Width:  1024,
+	Height: 512,
+}
+
+var PreviewLinkBuiltInSize = Size{
+	Width:  192,
+	Height: 192,
+}
+
 // ImageThumbnail generates a thumbnail image from an image.
 func ImageThumbnail(image []byte) ([]byte, error) {
-	return Resize(image, 72, 72)
+	return Resize(image, ThumbnailSize)
 }
 
 func ProfilePicture(image []byte) ([]byte, error) {
-	return Resize(image, 640, 640)
+	return Resize(image, ProfilePictureSize)
 }
 
 // Resize generates a thumbnail image from an image.
-func Resize(image []byte, width int, height int) ([]byte, error) {
+func Resize(image []byte, size Size) ([]byte, error) {
 	img := bimg.NewImage(image)
 	options := bimg.Options{
-		Width:  width,
-		Height: height,
+		Width:  int(size.Width),
+		Height: int(size.Height),
 		Crop:   true,
 		Type:   bimg.JPEG,
 	}

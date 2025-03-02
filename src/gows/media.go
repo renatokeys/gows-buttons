@@ -24,7 +24,7 @@ func (gows *GoWS) UploadMedia(
 	return resp, err
 }
 
-func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTextMessage) error {
+func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTextMessage, highQuality bool) error {
 	text := message.Text
 	matched := media.ExtractUrlFromText(*text)
 	if matched == "" {
@@ -35,22 +35,30 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 	url := media.MakeSureURL(matched)
 	preview, err := media.GoscraperFetchPreview(gows.Context, url)
 	if err != nil {
-		return fmt.Errorf("failed to fetch preview: %w", err)
+		return fmt.Errorf("failed to fetch preview info for (%s): %w", url, err)
 	}
 
 	var resp *whatsmeow.UploadResponse
 	var thumbnail *[]byte
 	if preview.ImageUrl != "" {
-		resp, thumbnail, err = gows.fetchAndUploadMedia(jid, preview.ImageUrl)
-		if err != nil {
-			return fmt.Errorf("failed get image preview: %w", err)
+		if highQuality {
+			resp, thumbnail, err = gows.fetchAndUploadPreviewImage(jid, preview.ImageUrl)
+			if err != nil {
+				gows.Log.Warnf("failed get image high quality preview (%s): %v", preview.ImageUrl, err)
+			}
+		} else {
+			thumbnail, err = gows.fetchPreviewImage(preview.ImageUrl, media.PreviewLinkBuiltInSize)
+			if err != nil {
+				gows.Log.Warnf("failed get image preview (%s): %v", preview.ImageUrl, err)
+			}
+
 		}
 	}
 
-	if resp == nil && preview.IconUrl != "" {
-		resp, thumbnail, err = gows.fetchAndUploadMedia(jid, preview.ImageUrl)
+	if (thumbnail == nil || len(*thumbnail) == 0) && preview.IconUrl != "" {
+		thumbnail, err = gows.fetchPreviewImage(preview.IconUrl, media.ThumbnailSize)
 		if err != nil {
-			return fmt.Errorf("failed get image preview from icon: %w", err)
+			gows.Log.Warnf("failed get image preview for icon (%s): %v", preview.IconUrl, err)
 		}
 	}
 
@@ -59,11 +67,17 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 	message.MatchedText = &matched
 	message.Title = &preview.Title
 	message.Description = &preview.Description
-	if resp != nil {
+
+	if thumbnail != nil {
 		message.JPEGThumbnail = *thumbnail
+	}
+
+	if resp != nil {
 		message.ThumbnailDirectPath = &resp.DirectPath
 		message.ThumbnailSHA256 = resp.FileSHA256
 		message.ThumbnailEncSHA256 = resp.FileEncSHA256
+		message.ThumbnailHeight = &media.PreviewLinkSize.Height
+		message.ThumbnailWidth = &media.PreviewLinkSize.Width
 		message.MediaKey = resp.MediaKey
 		now := time.Now().Unix()
 		message.MediaKeyTimestamp = &now
@@ -71,12 +85,16 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 	return nil
 }
 
-func (gows *GoWS) fetchAndUploadMedia(jid types.JID, imageUrl string) (*whatsmeow.UploadResponse, *[]byte, error) {
-	image, err := gows.int.DownloadMedia(imageUrl)
+func (gows *GoWS) fetchAndUploadPreviewImage(jid types.JID, imageUrl string) (*whatsmeow.UploadResponse, *[]byte, error) {
+	imageOrig, err := gows.int.DownloadMedia(imageUrl)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to download image: %w", err)
 	}
-	resp, err := gows.Upload(gows.Context, image, whatsmeow.MediaImage)
+	image, err := media.Resize(imageOrig, media.PreviewLinkSize)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to resize image: %w", err)
+	}
+	resp, err := gows.UploadMedia(gows.Context, jid, image, whatsmeow.MediaLinkThumbnail)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to upload image: %w", err)
 	}
@@ -85,4 +103,16 @@ func (gows *GoWS) fetchAndUploadMedia(jid types.JID, imageUrl string) (*whatsmeo
 		return nil, nil, fmt.Errorf("failed to generate thumbnail: %w", err)
 	}
 	return &resp, &thumbnail, nil
+}
+
+func (gows *GoWS) fetchPreviewImage(imageUrl string, size media.Size) (*[]byte, error) {
+	image, err := gows.int.DownloadMedia(imageUrl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download image: %w", err)
+	}
+	thumbnail, err := media.Resize(image, size)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate thumbnail: %w", err)
+	}
+	return &thumbnail, nil
 }
