@@ -50,7 +50,7 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		// Link Preview
 		//
 		if req.LinkPreview {
-			err = cli.AddLinkPreviewIfFound(message.ExtendedTextMessage)
+			err = cli.AddLinkPreviewIfFound(jid, message.ExtendedTextMessage)
 			if err != nil {
 				s.log.Errorf("Failed to add link preview: %v", err)
 			}
