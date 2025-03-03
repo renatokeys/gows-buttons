@@ -40,23 +40,25 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 
 	var resp *whatsmeow.UploadResponse
 	var thumbnail *[]byte
-	if preview.ImageUrl != "" {
-		if highQuality {
-			resp, thumbnail, err = gows.fetchAndUploadPreviewImage(jid, preview.ImageUrl)
-			if err != nil {
-				gows.Log.Warnf("failed get image high quality preview (%s): %v", preview.ImageUrl, err)
-			}
-		} else {
-			thumbnail, err = gows.fetchPreviewImage(preview.ImageUrl, media.PreviewLinkBuiltInSize)
-			if err != nil {
-				gows.Log.Warnf("failed get image preview (%s): %v", preview.ImageUrl, err)
-			}
+	if preview.ImageUrl != "" && highQuality {
+		// Generate high quality thumbnail if asked
+		resp, thumbnail, err = gows.fetchImageThumbnailHQ(jid, preview.ImageUrl)
+		if err != nil {
+			gows.Log.Warnf("failed get image high quality preview (%s): %v", preview.ImageUrl, err)
+		}
 
+	} else if preview.ImageUrl != "" && !highQuality {
+		// Generate normal quality thumbnail
+		thumbnail, err = gows.fetchImageThumbnail(preview.ImageUrl, media.PreviewLinkBuiltInSize)
+		if err != nil {
+			gows.Log.Warnf("failed get image preview (%s): %v", preview.ImageUrl, err)
 		}
 	}
 
-	if (thumbnail == nil || len(*thumbnail) == 0) && preview.IconUrl != "" {
-		thumbnail, err = gows.fetchPreviewImage(preview.IconUrl, media.ThumbnailSize)
+	hasThumbnail := thumbnail != nil && len(*thumbnail) > 0
+	if !hasThumbnail && preview.IconUrl != "" {
+		// Generate thumbnail from icon if the main image is not available
+		thumbnail, err = gows.fetchImageThumbnail(preview.IconUrl, media.ThumbnailSize)
 		if err != nil {
 			gows.Log.Warnf("failed get image preview for icon (%s): %v", preview.IconUrl, err)
 		}
@@ -85,7 +87,10 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 	return nil
 }
 
-func (gows *GoWS) fetchAndUploadPreviewImage(jid types.JID, imageUrl string) (*whatsmeow.UploadResponse, *[]byte, error) {
+// fetchImageThumbnailHQ fetches the image from the URL, resizes it to the HQ size,
+// uploads it to the server, and returns the thumbnail.
+// aka High Quality thumbnail.
+func (gows *GoWS) fetchImageThumbnailHQ(jid types.JID, imageUrl string) (*whatsmeow.UploadResponse, *[]byte, error) {
 	imageOrig, err := gows.int.DownloadMedia(imageUrl)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to download image: %w", err)
@@ -105,7 +110,9 @@ func (gows *GoWS) fetchAndUploadPreviewImage(jid types.JID, imageUrl string) (*w
 	return &resp, &thumbnail, nil
 }
 
-func (gows *GoWS) fetchPreviewImage(imageUrl string, size media.Size) (*[]byte, error) {
+// fetchImageThumbnail fetches the image from the URL, resizes it to the right size,
+// and returns the thumbnail.
+func (gows *GoWS) fetchImageThumbnail(imageUrl string, size media.Size) (*[]byte, error) {
 	image, err := gows.int.DownloadMedia(imageUrl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download image: %w", err)
