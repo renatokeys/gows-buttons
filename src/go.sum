@@ -15,8 +15,8 @@ github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSV
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/devlikeapro/goscraper v0.0.0-20250303014241-c727a164bfac h1:gA9g1fTITmr0mEGBgS6+3GS/DeQJBTzQfAbi1PMywaI=
-github.com/devlikeapro/goscraper v0.0.0-20250303014241-c727a164bfac/go.mod h1:rMdXtjORBzmFS4VynAbqO78RnbruxTurN1NnPUCQ/6w=
+github.com/devlikeapro/goscraper v0.0.0-20250303023149-814c7b197668 h1:WqW3NahfDFMmtbHBix23wWdIqduQfdO55+XvhXJlmJM=
+github.com/devlikeapro/goscraper v0.0.0-20250303023149-814c7b197668/go.mod h1:Ezk+40Xo1pBhyjQxDWnPpujW7munML5zGsdecYMi43o=
 github.com/devlikeapro/whatsmeow v0.0.0-20250221160813-35b965ceadf1 h1:TF9gzAiVlKyg468/yccyly5kgOtSuVwXbMNaeGNdhzo=
 github.com/devlikeapro/whatsmeow v0.0.0-20250221160813-35b965ceadf1/go.mod h1:6hRrUtDWI2wTRClOd6m17GwrFE2a8/p5R4pjJsIVn+U=
 github.com/dhui/dktest v0.4.3 h1:wquqUxAFdcUgabAVLvSCOKOlag5cIZuaOjYIBOWdsR0=

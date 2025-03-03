@@ -3,6 +3,7 @@ package media
 import (
 	"context"
 	"github.com/devlikeapro/goscraper"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -33,10 +34,25 @@ type LinkPreview struct {
 	IconUrl     string
 }
 
+var ScrapeHeaders = map[string]string{
+	"User-Agent": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+	"Accept":     "Mozilla/5.0 (Windows; Windows NT 6.3; Win64; x64) Gecko/20100101 Firefox/67.7",
+}
+
 // GoscraperFetchPreview fetches a preview of a URL using goscraper.
 // https://github.com/devlikeapro/goscraper
-func GoscraperFetchPreview(ctx context.Context, url string) (*LinkPreview, error) {
-	s, err := goscraper.Scrape(url, 5)
+func GoscraperFetchPreview(ctx context.Context, uri string) (*LinkPreview, error) {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	scraper := goscraper.Scraper{
+		Url:         u,
+		MaxRedirect: 5,
+		Headers:     ScrapeHeaders,
+	}
+	s, err := scraper.Scrape(ctx)
 	if err != nil {
 		return nil, err
 	}

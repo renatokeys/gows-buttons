@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/devlikeapro/goscraper v0.0.0-20250303014241-c727a164bfac // branch: fork-master
+	github.com/devlikeapro/goscraper v0.0.0-20250303023149-814c7b197668 // branch: fork-master
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
