@@ -24,7 +24,7 @@ func (gows *GoWS) UploadMedia(
 	return resp, err
 }
 
-func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTextMessage, highQuality bool) error {
+func (gows *GoWS) AddLinkPreviewIfFound(ctx context.Context, jid types.JID, message *waE2E.ExtendedTextMessage, highQuality bool) error {
 	text := message.Text
 	matched := media.ExtractUrlFromText(*text)
 	if matched == "" {
@@ -33,7 +33,7 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 	// "matched" must be exact as it was in the text
 	// but scraped URL should be normalized (because it'd also find www.whatsapp.com)
 	url := media.MakeSureURL(matched)
-	preview, err := media.GoscraperFetchPreview(gows.Context, url)
+	preview, err := media.GoscraperFetchPreview(ctx, url)
 	if err != nil {
 		return fmt.Errorf("failed to fetch preview info for (%s): %w", url, err)
 	}
@@ -42,14 +42,14 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 	var thumbnail *[]byte
 	if preview.ImageUrl != "" && highQuality {
 		// Generate high quality thumbnail if asked
-		resp, thumbnail, err = gows.fetchImageThumbnailHQ(jid, preview.ImageUrl)
+		resp, thumbnail, err = gows.fetchImageThumbnailHQ(ctx, jid, preview.ImageUrl)
 		if err != nil {
 			gows.Log.Warnf("failed get image high quality preview (%s): %v", preview.ImageUrl, err)
 		}
 
 	} else if preview.ImageUrl != "" && !highQuality {
 		// Generate normal quality thumbnail
-		thumbnail, err = gows.fetchImageThumbnail(preview.ImageUrl, media.PreviewLinkBuiltInSize)
+		thumbnail, err = gows.fetchImageThumbnail(ctx, preview.ImageUrl, media.PreviewLinkBuiltInSize)
 		if err != nil {
 			gows.Log.Warnf("failed get image preview (%s): %v", preview.ImageUrl, err)
 		}
@@ -58,7 +58,7 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 	hasThumbnail := thumbnail != nil && len(*thumbnail) > 0
 	if !hasThumbnail && preview.IconUrl != "" {
 		// Generate thumbnail from icon if the main image is not available
-		thumbnail, err = gows.fetchImageThumbnail(preview.IconUrl, media.ThumbnailSize)
+		thumbnail, err = gows.fetchImageThumbnail(ctx, preview.IconUrl, media.ThumbnailSize)
 		if err != nil {
 			gows.Log.Warnf("failed get image preview for icon (%s): %v", preview.IconUrl, err)
 		}
@@ -90,20 +90,20 @@ func (gows *GoWS) AddLinkPreviewIfFound(jid types.JID, message *waE2E.ExtendedTe
 // fetchImageThumbnailHQ fetches the image from the URL, resizes it to the HQ size,
 // uploads it to the server, and returns the thumbnail.
 // aka High Quality thumbnail.
-func (gows *GoWS) fetchImageThumbnailHQ(jid types.JID, imageUrl string) (*whatsmeow.UploadResponse, *[]byte, error) {
-	imageOrig, err := gows.int.DownloadMedia(imageUrl)
+func (gows *GoWS) fetchImageThumbnailHQ(ctx context.Context, jid types.JID, imageUrl string) (*whatsmeow.UploadResponse, *[]byte, error) {
+	image, err := media.FetchBodyByUrl(ctx, imageUrl)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to download image: %w", err)
 	}
-	image, err := media.Resize(imageOrig, media.PreviewLinkSize)
+	imageResized, err := media.Resize(image, media.PreviewLinkSize)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to resize image: %w", err)
 	}
-	resp, err := gows.UploadMedia(gows.Context, jid, image, whatsmeow.MediaLinkThumbnail)
+	resp, err := gows.UploadMedia(gows.Context, jid, imageResized, whatsmeow.MediaLinkThumbnail)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to upload image: %w", err)
 	}
-	thumbnail, err := media.ImageThumbnail(image)
+	thumbnail, err := media.ImageThumbnail(imageResized)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to generate thumbnail: %w", err)
 	}
@@ -112,8 +112,8 @@ func (gows *GoWS) fetchImageThumbnailHQ(jid types.JID, imageUrl string) (*whatsm
 
 // fetchImageThumbnail fetches the image from the URL, resizes it to the right size,
 // and returns the thumbnail.
-func (gows *GoWS) fetchImageThumbnail(imageUrl string, size media.Size) (*[]byte, error) {
-	image, err := gows.int.DownloadMedia(imageUrl)
+func (gows *GoWS) fetchImageThumbnail(ctx context.Context, imageUrl string, size media.Size) (*[]byte, error) {
+	image, err := media.FetchBodyByUrl(ctx, imageUrl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download image: %w", err)
 	}

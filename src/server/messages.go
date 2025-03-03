@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+var (
+	FetchPreviewTimeout = 3 * time.Second
+)
+
 func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.MessageResponse, error) {
 	cli, err := s.Sm.Get(req.GetSession().GetId())
 	if err != nil {
@@ -50,7 +54,8 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		// Link Preview
 		//
 		if req.LinkPreview {
-			err = cli.AddLinkPreviewIfFound(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
+			linkPreviewCtx, _ := context.WithTimeout(cli.Context, FetchPreviewTimeout)
+			err = cli.AddLinkPreviewIfFound(linkPreviewCtx, jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
 			if err != nil {
 				s.log.Errorf("Failed to add link preview: %v", err)
 			}

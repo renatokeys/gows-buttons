@@ -2,7 +2,10 @@ package media
 
 import (
 	"context"
+	"fmt"
 	"github.com/devlikeapro/goscraper"
+	"io"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -69,4 +72,38 @@ func GoscraperFetchPreview(ctx context.Context, uri string) (*LinkPreview, error
 		IconUrl:     s.Preview.Icon,
 	}
 	return preview, nil
+}
+
+// FetchBodyByUrl fetches the body of a given URL and returns it as a byte slice.
+func FetchBodyByUrl(ctx context.Context, uri string) ([]byte, error) {
+	// Create an HTTP client with a timeout
+	req, err := http.NewRequestWithContext(ctx, "GET", uri, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	headers := ScrapeHeaders
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	// Perform the request
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch URL: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for non-2xx HTTP status codes
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("HTTP error: %s", resp.Status)
+	}
+
+	// Read response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Return the body
+	return body, nil
 }
