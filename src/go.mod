@@ -1,10 +1,11 @@
 module github.com/devlikeapro/gows
 
-go 1.23.3
+go 1.24.0
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/devlikeapro/goscraper v0.0.0-20250303014241-c727a164bfac // branch: fork-master
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
@@ -23,7 +24,6 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.5 // indirect
-	github.com/badoux/goscraper v0.0.0-20190827161153-36995ce6b19f // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -50,4 +50,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250221160813-35b965ceadf1
+replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250221160813-35b965ceadf1 // branch: fork-main

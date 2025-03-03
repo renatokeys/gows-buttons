@@ -2,7 +2,7 @@ package media
 
 import (
 	"context"
-	"github.com/badoux/goscraper"
+	"github.com/devlikeapro/goscraper"
 	"regexp"
 	"strings"
 )
@@ -34,7 +34,7 @@ type LinkPreview struct {
 }
 
 // GoscraperFetchPreview fetches a preview of a URL using goscraper.
-// https://github.com/badoux/goscraper
+// https://github.com/devlikeapro/goscraper
 func GoscraperFetchPreview(ctx context.Context, url string) (*LinkPreview, error) {
 	s, err := goscraper.Scrape(url, 5)
 	if err != nil {
