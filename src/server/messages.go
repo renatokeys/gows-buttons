@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	FetchPreviewTimeout = 3 * time.Second
+	FetchPreviewTimeout = 6 * time.Second
 )
 
 func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.MessageResponse, error) {
