@@ -38,6 +38,12 @@ func (gows *GoWS) AddLinkPreviewIfFound(ctx context.Context, jid types.JID, mess
 		return fmt.Errorf("failed to fetch preview info for (%s): %w", url, err)
 	}
 
+	type_ := waE2E.ExtendedTextMessage_NONE
+	message.PreviewType = &type_
+	message.MatchedText = &matched
+	message.Title = &preview.Title
+	message.Description = &preview.Description
+
 	var resp *whatsmeow.UploadResponse
 	var thumbnail *[]byte
 	if preview.ImageUrl != "" && highQuality {
@@ -63,12 +69,6 @@ func (gows *GoWS) AddLinkPreviewIfFound(ctx context.Context, jid types.JID, mess
 			gows.Log.Warnf("failed get image preview for icon (%s): %v", preview.IconUrl, err)
 		}
 	}
-
-	type_ := waE2E.ExtendedTextMessage_NONE
-	message.PreviewType = &type_
-	message.MatchedText = &matched
-	message.Title = &preview.Title
-	message.Description = &preview.Description
 
 	if thumbnail != nil {
 		message.JPEGThumbnail = *thumbnail
