@@ -8,6 +8,25 @@ import (
 	"time"
 )
 
+var (
+	FetchPreviewTimeout = 6 * time.Second
+)
+
+func (gows *GoWS) BuildConversationMessage(text string) *waE2E.Message {
+	message := waE2E.Message{}
+	message.Conversation = proto.String(text)
+	return &message
+}
+
+// BuildTextMessage builds a text message and adds a link preview if requested.
+func (gows *GoWS) BuildTextMessage(text string) *waE2E.Message {
+	message := waE2E.Message{}
+	message.ExtendedTextMessage = &waE2E.ExtendedTextMessage{
+		Text: proto.String(text),
+	}
+	return &message
+}
+
 // BuildEdit builds a message edit message using the given variables.
 // The built message can be sent normally using Client.SendMessage.
 //
@@ -24,8 +43,7 @@ func (gows *GoWS) BuildEdit(chat types.JID, id types.MessageID, newContent *waE2
 	}
 	// If the chat is a group, set the participant
 	if chat.Server == types.GroupServer {
-		participant := gows.int.GetOwnID().ToNonAD().String()
-		key.Participant = &participant
+		key.Participant = proto.String(gows.int.GetOwnID().ToNonAD().String())
 	}
 	return &waE2E.Message{
 		EditedMessage: &waE2E.FutureProofMessage{
