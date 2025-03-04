@@ -26,20 +26,16 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		return nil, err
 	}
 
-	message := waE2E.Message{}
-	mediaResponse := whatsmeow.UploadResponse{}
-
+	var message *waE2E.Message
+	extra := whatsmeow.SendRequestExtra{}
 	if req.Media == nil {
-		//
 		// Text Message
-		//
-		message.ExtendedTextMessage = &waE2E.ExtendedTextMessage{
-			Text: proto.String(req.Text),
+		message = cli.BuildTextMessage(req.Text)
+		// Link Preview
+		if req.LinkPreview {
+			cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
 		}
-
-		//
 		// Status Text Message
-		//
 		var backgroundArgb *uint32
 		if req.BackgroundColor != nil {
 			backgroundArgb, err = media.ParseColor(req.BackgroundColor.Value)
@@ -53,20 +49,9 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 			font = media.ParseFont(req.Font.Value)
 			message.ExtendedTextMessage.Font = font
 		}
-
-		//
-		// Link Preview
-		//
-		if req.LinkPreview {
-			linkPreviewCtx, cancel := context.WithTimeout(cli.Context, FetchPreviewTimeout)
-			defer cancel()
-			err = cli.AddLinkPreviewIfFound(linkPreviewCtx, jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
-			if err != nil {
-				s.log.Errorf("Failed to add link preview: %v", err)
-			}
-		}
-
 	} else {
+		var mediaResponse whatsmeow.UploadResponse
+		message = &waE2E.Message{}
 		var mediaType whatsmeow.MediaType
 		switch req.Media.Type {
 		case __.MediaType_IMAGE:
@@ -198,15 +183,14 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 				JPEGThumbnail: thumbnail,
 			}
 		}
-	}
 
-	extra := whatsmeow.SendRequestExtra{}
-	if mediaResponse.Handle != "" {
 		// Newsletters
-		extra.MediaHandle = mediaResponse.Handle
+		if mediaResponse.Handle != "" {
+			extra.MediaHandle = mediaResponse.Handle
+		}
 	}
 
-	res, err := cli.SendMessage(ctx, jid, &message, extra)
+	res, err := cli.SendMessage(ctx, jid, message, extra)
 	if err != nil {
 		return nil, err
 	}
@@ -304,10 +288,14 @@ func (s *Server) EditMessage(ctx context.Context, req *__.EditMessageRequest) (*
 		return nil, err
 	}
 
-	msg := &waE2E.Message{
-		Conversation: &req.Text,
+	message := cli.BuildConversationMessage(req.Text)
+	if req.LinkPreview && media.ExtractUrlFromText(req.Text) != "" {
+		// Switch to text message if it has URL and link preview is requested
+		message = cli.BuildTextMessage(req.Text)
+		cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
 	}
-	editMessage := cli.BuildEdit(jid, req.MessageId, msg)
+
+	editMessage := cli.BuildEdit(jid, req.MessageId, message)
 	res, err := cli.SendMessage(ctx, jid, editMessage)
 	if err != nil {
 		return nil, err

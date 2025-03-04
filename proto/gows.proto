@@ -364,6 +364,8 @@ message EditMessageRequest {
   string jid = 2;
   string messageId = 4;
   string text = 5;
+  bool linkPreview = 6;
+  bool linkPreviewHighQuality = 7;
 }
 
 //
