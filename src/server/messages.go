@@ -31,6 +31,13 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 
 	if req.Media == nil {
 		//
+		// Text Message
+		//
+		message.ExtendedTextMessage = &waE2E.ExtendedTextMessage{
+			Text: proto.String(req.Text),
+		}
+
+		//
 		// Status Text Message
 		//
 		var backgroundArgb *uint32
@@ -39,22 +46,20 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 			if err != nil {
 				return nil, err
 			}
+			message.ExtendedTextMessage.BackgroundArgb = backgroundArgb
 		}
 		var font *waE2E.ExtendedTextMessage_FontType
 		if req.Font != nil {
 			font = media.ParseFont(req.Font.Value)
+			message.ExtendedTextMessage.Font = font
 		}
 
-		message.ExtendedTextMessage = &waE2E.ExtendedTextMessage{
-			Text:           proto.String(req.Text),
-			BackgroundArgb: backgroundArgb,
-			Font:           font,
-		}
 		//
 		// Link Preview
 		//
 		if req.LinkPreview {
-			linkPreviewCtx, _ := context.WithTimeout(cli.Context, FetchPreviewTimeout)
+			linkPreviewCtx, cancel := context.WithTimeout(cli.Context, FetchPreviewTimeout)
+			defer cancel()
 			err = cli.AddLinkPreviewIfFound(linkPreviewCtx, jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
 			if err != nil {
 				s.log.Errorf("Failed to add link preview: %v", err)
