@@ -3,6 +3,7 @@ package gows
 import (
 	"github.com/avast/retry-go"
 	"github.com/devlikeapro/gows/storage"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/proto/waHistorySync"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
@@ -82,10 +83,12 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 	switch event.(type) {
 	case *events.Message:
 		msg := event.(*events.Message)
-		saved := st.handleMessageEvent(msg)
+		saved := st.handleRealMessageEvent(msg)
 		if saved {
 			st.log.Debugf("Stored message %v(%v)", msg.Info.Chat, msg.Info.ID)
+			return
 		}
+		st.handleMessageEvent(msg)
 	case *events.Receipt:
 		st.handleReceipt(event.(*events.Receipt))
 	case *events.HistorySync:
@@ -102,7 +105,7 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 	}
 }
 
-func (st *GOWSStorage) handleMessageEvent(event *events.Message) bool {
+func (st *GOWSStorage) handleRealMessageEvent(event *events.Message) bool {
 	if !shouldStoreMessage(event) {
 		return false
 	}
@@ -125,6 +128,17 @@ func (st *GOWSStorage) handleMessageEvent(event *events.Message) bool {
 		st.log.Errorf("Error storing message %v(%v): %v", event.Info.Chat, event.Info.ID, err)
 	}
 	return true
+}
+
+func (st *GOWSStorage) handleMessageEvent(event *events.Message) {
+	// Revoked message
+	isRevoked := event.Message.ProtocolMessage != nil && *event.Message.ProtocolMessage.Type == waE2E.ProtocolMessage_REVOKE
+	if isRevoked {
+		err := st.storage.Messages.DeleteMessage(*event.Message.ProtocolMessage.Key.ID)
+		if err != nil {
+			st.log.Errorf("Error deleting message %v: %v", *event.Message.ProtocolMessage.Key.ID, err)
+		}
+	}
 }
 
 func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
@@ -179,7 +193,7 @@ func (st *GOWSStorage) saveHistoryForOneChat(conv *waHistorySync.Conversation, c
 			st.log.Errorf("Error parsing message: %v", err)
 			continue
 		}
-		st.handleMessageEvent(evt)
+		st.handleRealMessageEvent(evt)
 	}
 	st.log.Debugf("Saved %v messages in %v", len(conv.GetMessages()), chatJID)
 }
