@@ -273,12 +273,12 @@ func (s *Server) RevokeMessage(ctx context.Context, req *__.RevokeMessageRequest
 
 	var participantJid types.JID
 	if req.Sender != "" {
-		participantJid, err = types.ParseJID(req.Jid)
+		participantJid, err = types.ParseJID(req.Sender)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		participantJid = types.EmptyJID
+		participantJid = *cli.Store.ID
 	}
 
 	msg := cli.BuildRevoke(jid, participantJid, req.MessageId)
