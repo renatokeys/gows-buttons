@@ -28,7 +28,7 @@ type NewsletterMessagesResp struct {
 }
 
 // GetNewsletterMessagesByInvite gets messages in a WhatsApp channel using an invite code.
-func (cli *GoWS) GetNewsletterMessagesByInvite(code string, params *GetNewsletterMessagesByInviteParams) (*NewsletterMessagesResp, error) {
+func (gows *GoWS) GetNewsletterMessagesByInvite(code string, params *GetNewsletterMessagesByInviteParams) (*NewsletterMessagesResp, error) {
 	key := strings.TrimPrefix(code, whatsmeow.NewsletterLinkPrefix)
 	attrs := waBinary.Attrs{
 		"type":  "invite",
@@ -41,7 +41,7 @@ func (cli *GoWS) GetNewsletterMessagesByInvite(code string, params *GetNewslette
 		}
 	}
 
-	resp, err := cli.int.SendIQ(whatsmeow.DangerousInfoQuery{
+	resp, err := gows.int.SendIQ(whatsmeow.DangerousInfoQuery{
 		Namespace: "newsletter",
 		Type:      "get",
 		To:        types.ServerJID,
@@ -58,7 +58,7 @@ func (cli *GoWS) GetNewsletterMessagesByInvite(code string, params *GetNewslette
 	if !ok {
 		return nil, &whatsmeow.ElementMissingError{Tag: "messages", In: "newsletter messages response"}
 	}
-	messages := cli.int.ParseNewsletterMessages(&messagesNode)
+	messages := gows.int.ParseNewsletterMessages(&messagesNode)
 	messages = filterMessageNull(messages)
 	jid, ok := messagesNode.Attrs["jid"].(types.JID)
 	if !ok {
@@ -131,7 +131,7 @@ type respSearchNewsletterDirectorySearch struct {
 }
 
 // SearchNewsletterByView searches for WhatsApp channels by views.
-func (cli *GoWS) SearchNewsletterByView(query SearchNewsletterByViewParams) (*SearchNewsletterResult, error) {
+func (gows *GoWS) SearchNewsletterByView(query SearchNewsletterByViewParams) (*SearchNewsletterResult, error) {
 	variables := Map{
 		"input": Map{
 			"view": query.View,
@@ -143,7 +143,7 @@ func (cli *GoWS) SearchNewsletterByView(query SearchNewsletterByViewParams) (*Se
 			"start_cursor": query.Page.StartCursor,
 		},
 	}
-	data, err := cli.int.SendMexIQ(context.TODO(), queryNewslettersDirectoryList, variables)
+	data, err := gows.int.SendMexIQ(context.TODO(), queryNewslettersDirectoryList, variables)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func (cli *GoWS) SearchNewsletterByView(query SearchNewsletterByViewParams) (*Se
 }
 
 // SearchNewsletterByText searches for WhatsApp channels by text.
-func (cli *GoWS) SearchNewsletterByText(query SearchNewsletterByTextParams) (*SearchNewsletterResult, error) {
+func (gows *GoWS) SearchNewsletterByText(query SearchNewsletterByTextParams) (*SearchNewsletterResult, error) {
 	variables := Map{
 		"input": Map{
 			"search_text":  query.Text,
@@ -173,7 +173,7 @@ func (cli *GoWS) SearchNewsletterByText(query SearchNewsletterByTextParams) (*Se
 			"start_cursor": query.Page.StartCursor,
 		},
 	}
-	data, err := cli.int.SendMexIQ(context.TODO(), queryNewslettersDirectorySearch, variables)
+	data, err := gows.int.SendMexIQ(context.TODO(), queryNewslettersDirectorySearch, variables)
 	if err != nil {
 		return nil, err
 	}
