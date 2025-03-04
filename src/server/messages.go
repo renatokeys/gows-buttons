@@ -293,3 +293,24 @@ func (s *Server) RevokeMessage(ctx context.Context, req *__.RevokeMessageRequest
 	}
 	return &__.MessageResponse{Id: res.ID, Timestamp: res.Timestamp.Unix()}, nil
 }
+
+func (s *Server) EditMessage(ctx context.Context, req *__.EditMessageRequest) (*__.MessageResponse, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+	jid, err := types.ParseJID(req.Jid)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := &waE2E.Message{
+		Conversation: &req.Text,
+	}
+	editMessage := cli.BuildEdit(jid, req.MessageId, msg)
+	res, err := cli.SendMessage(ctx, jid, editMessage)
+	if err != nil {
+		return nil, err
+	}
+	return &__.MessageResponse{Id: res.ID, Timestamp: res.Timestamp.Unix()}, nil
+}

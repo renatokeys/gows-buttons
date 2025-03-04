@@ -105,6 +105,7 @@ service MessageService {
   rpc SendMessage (MessageRequest) returns (MessageResponse);
   rpc SendReaction (MessageReaction) returns (MessageResponse);
   rpc MarkRead(MarkReadRequest) returns (Empty);
+  rpc EditMessage(EditMessageRequest) returns (MessageResponse);
   rpc RevokeMessage(RevokeMessageRequest) returns (MessageResponse);
 
   //
@@ -356,6 +357,13 @@ message RevokeMessageRequest {
   string jid = 2;
   string sender = 3;
   string messageId = 4;
+}
+
+message EditMessageRequest {
+  Session session = 1;
+  string jid = 2;
+  string messageId = 4;
+  string text = 5;
 }
 
 //
