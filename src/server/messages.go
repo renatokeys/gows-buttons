@@ -260,3 +260,31 @@ func (s *Server) MarkRead(ctx context.Context, req *__.MarkReadRequest) (*__.Emp
 	}
 	return &__.Empty{}, nil
 }
+
+func (s *Server) RevokeMessage(ctx context.Context, req *__.RevokeMessageRequest) (*__.MessageResponse, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+	jid, err := types.ParseJID(req.Jid)
+	if err != nil {
+		return nil, err
+	}
+
+	var participantJid types.JID
+	if req.Sender != "" {
+		participantJid, err = types.ParseJID(req.Jid)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		participantJid = types.EmptyJID
+	}
+
+	msg := cli.BuildRevoke(jid, participantJid, req.MessageId)
+	res, err := cli.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &__.MessageResponse{Id: res.ID, Timestamp: res.Timestamp.Unix()}, nil
+}

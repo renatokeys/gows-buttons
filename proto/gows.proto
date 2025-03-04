@@ -93,14 +93,19 @@ service MessageService {
   //
   // Actions
   //
-  rpc SendMessage (MessageRequest) returns (MessageResponse);
-  rpc SendReaction (MessageReaction) returns (MessageResponse);
   rpc GetProfilePicture (ProfilePictureRequest) returns (ProfilePictureResponse);
   rpc SendPresence(PresenceRequest) returns (Empty);
   rpc SendChatPresence(ChatPresenceRequest) returns (Empty);
   rpc SubscribePresence(SubscribePresenceRequest) returns (Empty);
-  rpc MarkRead(MarkReadRequest) returns (Empty);
   rpc CheckPhones(CheckPhonesRequest) returns (CheckPhonesResponse);
+
+  //
+  // Message
+  //
+  rpc SendMessage (MessageRequest) returns (MessageResponse);
+  rpc SendReaction (MessageReaction) returns (MessageResponse);
+  rpc MarkRead(MarkReadRequest) returns (Empty);
+  rpc RevokeMessage(RevokeMessageRequest) returns (MessageResponse);
 
   //
   // Newsletters
@@ -345,6 +350,14 @@ message PhoneInfo {
 message CheckPhonesResponse {
   repeated PhoneInfo infos = 1;
 }
+
+message RevokeMessageRequest {
+  Session session = 1;
+  string jid = 2;
+  string sender = 3;
+  string messageId = 4;
+}
+
 //
 // Newsletters
 //
