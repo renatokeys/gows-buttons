@@ -5,6 +5,7 @@ import (
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 	"time"
 )
 
@@ -56,5 +57,15 @@ func (gows *GoWS) BuildEdit(chat types.JID, id types.MessageID, newContent *waE2
 				},
 			},
 		},
+	}
+}
+
+func (gows *GoWS) BuildContextInfo(msg *events.Message) *waE2E.ContextInfo {
+	quoted := msg.Message
+	quoted.MessageContextInfo = nil
+	return &waE2E.ContextInfo{
+		StanzaID:      proto.String(msg.Info.ID),
+		Participant:   proto.String(msg.Info.Sender.ToNonAD().String()),
+		QuotedMessage: quoted,
 	}
 }

@@ -26,6 +26,17 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		return nil, err
 	}
 
+	var contextInfo *waE2E.ContextInfo
+	if req.ReplyTo != "" {
+		replyMessage, err := cli.Storage.Messages.GetMessage(req.ReplyTo)
+		if err != nil {
+			s.log.Warnf("Failed to get message for reply: %v", err)
+		}
+		if replyMessage != nil {
+			contextInfo = cli.BuildContextInfo(replyMessage.Message)
+		}
+	}
+
 	var message *waE2E.Message
 	extra := whatsmeow.SendRequestExtra{}
 	if req.Media == nil {
@@ -35,6 +46,10 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		if req.LinkPreview {
 			cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
 		}
+
+		// Reply
+		message.ExtendedTextMessage.ContextInfo = contextInfo
+
 		// Status Text Message
 		var backgroundArgb *uint32
 		if req.BackgroundColor != nil {
@@ -79,6 +94,8 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 				MediaKey:      mediaResponse.MediaKey,
 				FileEncSHA256: mediaResponse.FileEncSHA256,
 			}
+			// Reply
+			message.ImageMessage.ContextInfo = contextInfo
 		case __.MediaType_AUDIO:
 			mediaType = whatsmeow.MediaAudio
 			var waveform []byte
@@ -125,6 +142,8 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 				Waveform:      waveform,
 				PTT:           &ptt,
 			}
+			// Reply
+			message.AudioMessage.ContextInfo = contextInfo
 		case __.MediaType_VIDEO:
 			mediaType = whatsmeow.MediaVideo
 			// Upload
@@ -155,6 +174,8 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 				FileLength:    &mediaResponse.FileLength,
 				JPEGThumbnail: thumbnail,
 			}
+			// Reply
+			message.VideoMessage.ContextInfo = contextInfo
 
 		case __.MediaType_DOCUMENT:
 			mediaType = whatsmeow.MediaDocument
@@ -189,6 +210,8 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 				JPEGThumbnail: thumbnail,
 			}
 
+			// Reply
+			documentMessage.ContextInfo = contextInfo
 			message.DocumentWithCaptionMessage = &waE2E.FutureProofMessage{
 				Message: &waE2E.Message{
 					DocumentMessage: documentMessage,

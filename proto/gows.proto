@@ -275,6 +275,8 @@ message MessageRequest {
   OptionalUInt32 font = 6;
   bool linkPreview = 7;
   bool linkPreviewHighQuality = 8;
+
+  string replyTo = 9;
 }
 
 message MessageReaction {
