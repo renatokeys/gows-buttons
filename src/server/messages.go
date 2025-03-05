@@ -171,16 +171,28 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 			}
 
 			// Attach
-			message.DocumentMessage = &waE2E.DocumentMessage{
+			fileName := req.Media.Filename
+			if fileName == "" {
+				fileName = "Untitled"
+			}
+			documentMessage := &waE2E.DocumentMessage{
 				Caption:       proto.String(req.Text),
+				Title:         proto.String(fileName),
 				Mimetype:      proto.String(req.Media.Mimetype),
-				URL:           &mediaResponse.URL,
-				DirectPath:    &mediaResponse.DirectPath,
+				URL:           proto.String(mediaResponse.URL),
+				DirectPath:    proto.String(mediaResponse.DirectPath),
 				MediaKey:      mediaResponse.MediaKey,
 				FileEncSHA256: mediaResponse.FileEncSHA256,
 				FileSHA256:    mediaResponse.FileSHA256,
-				FileLength:    &mediaResponse.FileLength,
+				FileLength:    proto.Uint64(mediaResponse.FileLength),
+				FileName:      proto.String(fileName),
 				JPEGThumbnail: thumbnail,
+			}
+
+			message.DocumentWithCaptionMessage = &waE2E.FutureProofMessage{
+				Message: &waE2E.Message{
+					DocumentMessage: documentMessage,
+				},
 			}
 		}
 

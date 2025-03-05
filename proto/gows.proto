@@ -261,6 +261,7 @@ message Media {
   MediaType type = 2;
   string mimetype = 3;
   AudioInfo audio = 4;
+  string filename = 5;
 }
 
 
