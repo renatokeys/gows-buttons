@@ -28,6 +28,7 @@ func (f *MessageMapper) ToFields(entity *storage.StoredMessage) map[string]inter
 		"jid":       entity.Info.Chat,
 		"from_me":   entity.Info.IsFromMe,
 		"timestamp": entity.Info.Timestamp,
+		"is_real":   entity.IsReal,
 	}
 }
 func (f *MessageMapper) Marshal(msg *storage.StoredMessage) ([]byte, error) {
@@ -48,6 +49,7 @@ func (f *MessageMapper) Marshal(msg *storage.StoredMessage) ([]byte, error) {
 		NewsletterMeta        *events.NewsletterMessageMeta `json:"NewsletterMeta"`
 		RawMessage            json.RawMessage               `json:"RawMessage"`
 		Status                storage.Status                `json:"Status"`
+		IsReal                bool                          `json:"IsReal"`
 	}
 
 	if msg.Message.Message != nil {
@@ -86,6 +88,7 @@ func (f *MessageMapper) Marshal(msg *storage.StoredMessage) ([]byte, error) {
 	temp.RetryCount = msg.RetryCount
 	temp.NewsletterMeta = msg.NewsletterMeta
 	temp.Status = msg.Status
+	temp.IsReal = msg.IsReal
 
 	return json.Marshal(temp)
 }
@@ -108,9 +111,11 @@ func (f *MessageMapper) Unmarshal(data []byte, msg *storage.StoredMessage) error
 		NewsletterMeta        *events.NewsletterMessageMeta `json:"NewsletterMeta"`
 		RawMessage            json.RawMessage               `json:"RawMessage"`
 		Status                storage.Status                `json:"Status"`
+		IsReal                bool                          `json:"IsReal"`
 	}
 
 	// Unmarshal into the temporary structure
+	temp.IsReal = true
 	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
 	}
@@ -129,6 +134,7 @@ func (f *MessageMapper) Unmarshal(data []byte, msg *storage.StoredMessage) error
 	msg.RetryCount = temp.RetryCount
 	msg.NewsletterMeta = temp.NewsletterMeta
 	msg.Status = temp.Status
+	msg.IsReal = temp.IsReal
 
 	// Unmarshal Message if present
 	if !isNullJson(temp.Message) {

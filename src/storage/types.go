@@ -20,6 +20,7 @@ const (
 // StoredMessage contains a message and some additional data.
 type StoredMessage struct {
 	*events.Message
+	IsReal bool
 	Status Status
 }
 

@@ -33,7 +33,7 @@ func (st *GOWSStorage) GetMessageForRetry(requester, to types.JID, id types.Mess
 	return msg.Message.RawMessage
 }
 
-func shouldStoreMessage(event *events.Message) bool {
+func isRealMessage(event *events.Message) bool {
 	if event.Message == nil {
 		return false
 	}
@@ -115,9 +115,6 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 }
 
 func (st *GOWSStorage) handleRealMessageEvent(event *events.Message) bool {
-	if !shouldStoreMessage(event) {
-		return false
-	}
 	var status storage.Status
 	if event.SourceWebMsg != nil && event.SourceWebMsg.Status != nil {
 		status = storage.Status(*event.SourceWebMsg.Status)
@@ -129,10 +126,13 @@ func (st *GOWSStorage) handleRealMessageEvent(event *events.Message) bool {
 		}
 	}
 
-	err := st.storage.Messages.UpsertOneMessage(&storage.StoredMessage{
-		Status:  status,
+	messageToStore := &storage.StoredMessage{
 		Message: event,
-	})
+		Status:  status,
+		IsReal:  isRealMessage(event),
+	}
+
+	err := st.storage.Messages.UpsertOneMessage(messageToStore)
 	if err != nil {
 		st.log.Errorf("Error storing message %v(%v): %v", event.Info.Chat, event.Info.ID, err)
 	}
@@ -164,7 +164,7 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 		return
 	}
 	for _, id := range event.MessageIDs {
-		st.log.Debugf("Updating status for message %v(%v) to %v (receipt type: '%v')", event.Chat, id, status, event.Type)
+		st.log.Debugf("Updating status for message %v(%v) to %v (receipt type: '%v')", event.Chat, id, status, event.Type.GoString())
 		msg, err := st.storage.Messages.GetMessage(id)
 		if err != nil {
 			st.log.Errorf("Error getting message %v(%v): %v", event.Chat, id, err)

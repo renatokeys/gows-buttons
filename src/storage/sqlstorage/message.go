@@ -44,6 +44,7 @@ func (s SqlMessageStore) GetAllMessages(filters storage.MessageFilter, paginatio
 		conditions = append(conditions, sq.Eq{"from_me": filters.FromMe})
 	}
 
+	conditions = append(conditions, sq.Eq{"is_real": true})
 	sort := []storage.Sort{
 		{
 			Field: "timestamp",
@@ -84,6 +85,7 @@ func (s SqlMessageStore) DeleteMessage(id types.MessageID) error {
 func (s SqlMessageStore) getLastMessagesPostgresSubquery() *sq.SelectBuilder {
 	query := sq.Select("DISTINCT ON (jid) id").
 		From(s.table.Name).
+		Where("is_real = true").
 		OrderBy("jid, timestamp DESC")
 	return &query
 }
@@ -93,7 +95,8 @@ func (s SqlMessageStore) getLastMessagesSQLiteSubquery() *sq.SelectBuilder {
 	query := sq.Select("id").
 		FromSelect(
 			sq.Select("id", "jid", "timestamp", "ROW_NUMBER() OVER (PARTITION BY jid ORDER BY timestamp DESC) as rn").
-				From(s.table.Name),
+				From(s.table.Name).
+				Where("is_real = true"),
 			"sub").
 		Where("rn = 1")
 	return &query

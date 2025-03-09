@@ -15,6 +15,7 @@ var MessageTable = Table{
 		"id",
 		"timestamp",
 		"from_me",
+		"is_real",
 		"data",
 	},
 	DataField: "data",
