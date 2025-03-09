@@ -24,6 +24,15 @@ func (st *GOWSStorage) GetCachedGroupStorage() storage.GroupStorage {
 	)
 }
 
+func (st *GOWSStorage) GetMessageForRetry(requester, to types.JID, id types.MessageID) *waE2E.Message {
+	msg, err := st.storage.Messages.GetMessage(id)
+	if err != nil {
+		st.log.Errorf("Error getting message for retry - requester %v, to %v, id %v: %v", requester, to, id, err)
+		return nil
+	}
+	return msg.Message.RawMessage
+}
+
 func shouldStoreMessage(event *events.Message) bool {
 	if event.Message == nil {
 		return false

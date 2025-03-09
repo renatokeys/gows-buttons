@@ -151,6 +151,7 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 	}
 	gows.Storage.Groups = gows.st.GetCachedGroupStorage()
 	storage.Chats = views.NewChatView(storage.Messages, storage.Contacts, storage.Groups)
+	gows.GetMessageForRetry = gows.st.GetMessageForRetry
 	return &gows, nil
 }
 
