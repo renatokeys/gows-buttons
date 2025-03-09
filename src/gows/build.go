@@ -1,11 +1,11 @@
 package gows
 
 import (
+	"fmt"
 	"github.com/golang/protobuf/proto"
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
-	"go.mau.fi/whatsmeow/types/events"
 	"time"
 )
 
@@ -60,12 +60,47 @@ func (gows *GoWS) BuildEdit(chat types.JID, id types.MessageID, newContent *waE2
 	}
 }
 
-func (gows *GoWS) BuildContextInfo(msg *events.Message) *waE2E.ContextInfo {
-	quoted := msg.Message
-	quoted.MessageContextInfo = nil
-	return &waE2E.ContextInfo{
-		StanzaID:      proto.String(msg.Info.ID),
-		Participant:   proto.String(msg.Info.Sender.ToNonAD().String()),
-		QuotedMessage: quoted,
+func (gows *GoWS) PopulateContextInfoWithReply(info *waE2E.ContextInfo, replyToId types.MessageID) (*waE2E.ContextInfo, error) {
+	msg, err := gows.Storage.Messages.GetMessage(replyToId)
+	if err != nil {
+		return info, err
 	}
+
+	if info == nil {
+		info = &waE2E.ContextInfo{}
+	}
+
+	quoted := msg.Message.Message
+	quoted.MessageContextInfo = nil
+	info.StanzaID = proto.String(msg.Info.ID)
+	info.Participant = proto.String(msg.Info.Sender.ToNonAD().String())
+	info.QuotedMessage = quoted
+	return info, nil
+}
+
+func (gows *GoWS) PopulateContextInfoDisappearingSettings(info *waE2E.ContextInfo, jid types.JID) (*waE2E.ContextInfo, error) {
+	// Groups
+	if jid.Server == types.GroupServer {
+		group, err := gows.Storage.Groups.GetGroup(jid)
+		if err != nil {
+			return info, err
+		}
+		if group == nil {
+			return info, fmt.Errorf("group not found: %s", jid)
+		}
+		if !group.IsEphemeral {
+			return info, nil
+		}
+
+		if info == nil {
+			info = &waE2E.ContextInfo{}
+		}
+		info.Expiration = proto.Uint32(group.DisappearingTimer)
+		info.DisappearingMode = &waE2E.DisappearingMode{
+			Initiator:     waE2E.DisappearingMode_CHANGED_IN_CHAT.Enum(),
+			Trigger:       waE2E.DisappearingMode_CHAT_SETTING.Enum(),
+			InitiatedByMe: proto.Bool(false),
+		}
+	}
+	return info, nil
 }
