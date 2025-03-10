@@ -29,3 +29,7 @@ func (s *SqlChatEphemeralSettingStore) GetChatEphemeralSetting(id types.JID) (*s
 func (s *SqlChatEphemeralSettingStore) UpsertChatEphemeralSetting(setting *storage.StoredChatEphemeralSetting) error {
 	return s.UpsertOne(setting)
 }
+
+func (s *SqlChatEphemeralSettingStore) DeleteChatEphemeralSetting(id types.JID) error {
+	return s.DeleteById(id.String())
+}
