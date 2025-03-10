@@ -23,6 +23,11 @@ func (gows *GoWS) PopulateContextInfoDisappearingSettings(info *waE2E.ContextInf
 		info = &waE2E.ContextInfo{}
 	}
 	info.Expiration = proto.Uint32(setting.Setting.Expiration)
+
+	//
+	// NOWEB send only Expiration field, and it works :)
+	// But we send all fields for compatibility
+	//
 	info.EphemeralSettingTimestamp = setting.Setting.Timestamp
 	info.DisappearingMode = &waE2E.DisappearingMode{
 		Initiator:     setting.Setting.Initiator,
