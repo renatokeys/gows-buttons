@@ -107,6 +107,8 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 			return
 		}
 		st.handleGroupInfo(event.(*events.GroupInfo))
+	case *events.DeleteChat:
+		st.handleDeleteChat(event.(*events.DeleteChat))
 	}
 }
 
@@ -266,4 +268,16 @@ func (st *GOWSStorage) handleGroupInfo(info *events.GroupInfo) {
 		st.log.Errorf("Error updating group %v: %v", info.JID, err)
 	}
 	return
+}
+
+func (st *GOWSStorage) handleDeleteChat(event *events.DeleteChat) {
+	err := st.storage.Messages.DeleteChatMessages(event.JID)
+	if err != nil {
+		st.log.Errorf("Error deleting chat messages %v: %v", event.JID, err)
+	}
+	err = st.storage.ChatEphemeralSetting.DeleteChatEphemeralSetting(event.JID)
+	if err != nil {
+		st.log.Errorf("Error deleting chat ephemeral setting %v: %v", event.JID, err)
+	}
+	st.log.Debugf("Deleted chat %v", event.JID)
 }
