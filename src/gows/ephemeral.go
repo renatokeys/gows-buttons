@@ -5,6 +5,7 @@ import (
 	"github.com/devlikeapro/gows/storage"
 	"github.com/golang/protobuf/proto"
 	"go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/proto/waHistorySync"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 )
@@ -139,4 +140,19 @@ func (gows *GoWS) ExtractEphemeralSettingsChanged(event *events.Message) *storag
 	default:
 		return nil
 	}
+}
+
+func (gows *GoWS) ExtractEphemeralSettingsFromConversation(conv *waHistorySync.Conversation, jid types.JID) *storage.StoredChatEphemeralSetting {
+	if conv.EphemeralExpiration == nil || *conv.EphemeralExpiration == 0 {
+		return nil
+	}
+	setting := storage.NotEphemeral(jid)
+	setting.IsEphemeral = true
+	setting.Setting = &storage.EphemeralSetting{
+		Initiator:     conv.DisappearingMode.Initiator,
+		Trigger:       conv.DisappearingMode.Trigger,
+		InitiatedByMe: conv.DisappearingMode.InitiatedByMe,
+		Timestamp:     conv.EphemeralSettingTimestamp,
+	}
+	return setting
 }

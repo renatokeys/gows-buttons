@@ -224,6 +224,15 @@ func (st *GOWSStorage) saveHistoryForOneChat(conv *waHistorySync.Conversation, c
 		st.handleSaveMessage(evt)
 	}
 	st.log.Debugf("Saved %v messages in %v", len(conv.GetMessages()), chatJID)
+
+	setting := st.gows.ExtractEphemeralSettingsFromConversation(conv, chatJID)
+	if setting != nil {
+		err := st.storage.ChatEphemeralSetting.UpsertChatEphemeralSetting(setting)
+		if err != nil {
+			st.log.Errorf("Error updating chat ephemeral setting %v: %v", setting.ID, err)
+		}
+		st.log.Debugf("Initial chat ephemeral setting %v (enabled: %v)", setting.ID, setting.IsEphemeral)
+	}
 }
 
 func (st *GOWSStorage) handleMeJoinedGroup(group *events.JoinedGroup) {
