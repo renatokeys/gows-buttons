@@ -38,45 +38,53 @@ func (gows *GoWS) PopulateContextInfoDisappearingSettings(info *waE2E.ContextInf
 }
 
 func (gows *GoWS) getEphemeralSettings(jid types.JID) (*storage.StoredChatEphemeralSetting, error) {
-	if jid.Server == types.GroupServer {
-		group, err := gows.Storage.Groups.GetGroup(jid)
-		if errors.Is(err, storage.ErrNotFound) {
-			return storage.NotEphemeral(jid), nil
-		}
-		if err != nil {
-			return nil, err
-		}
-		if !group.IsEphemeral {
-			return storage.NotEphemeral(jid), nil
-		}
+	switch {
+	case jid.Server == types.GroupServer:
+		return gows.getGroupEphemeralSettings(jid)
+	case jid.Server == types.DefaultUserServer || jid.Server == types.HiddenUserServer:
+		return gows.getChatEphemeralSettings(jid)
+	default:
+		return storage.NotEphemeral(jid), nil
+	}
+}
 
-		setting := &storage.StoredChatEphemeralSetting{
-			ID:          jid,
-			IsEphemeral: true,
-			Setting: &storage.EphemeralSetting{
-				Initiator:     waE2E.DisappearingMode_CHANGED_IN_CHAT.Enum(),
-				Trigger:       waE2E.DisappearingMode_CHAT_SETTING.Enum(),
-				InitiatedByMe: proto.Bool(false),
-				Expiration:    group.DisappearingTimer,
-			},
-		}
-		return setting, nil
+func (gows *GoWS) getGroupEphemeralSettings(jid types.JID) (*storage.StoredChatEphemeralSetting, error) {
+	group, err := gows.Storage.Groups.GetGroup(jid)
+	if errors.Is(err, storage.ErrNotFound) {
+		return storage.NotEphemeral(jid), nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if !group.IsEphemeral {
+		return storage.NotEphemeral(jid), nil
 	}
 
-	if jid.Server == types.DefaultUserServer || jid.Server == types.HiddenUserServer {
-		setting, err := gows.Storage.ChatEphemeralSetting.GetChatEphemeralSetting(jid)
-		if errors.Is(err, storage.ErrNotFound) {
-			return storage.NotEphemeral(jid), nil
-		}
-		if err != nil {
-			return nil, err
-		}
-		if setting == nil {
-			return storage.NotEphemeral(jid), nil
-		}
-		return setting, nil
+	setting := &storage.StoredChatEphemeralSetting{
+		ID:          jid,
+		IsEphemeral: true,
+		Setting: &storage.EphemeralSetting{
+			Initiator:     waE2E.DisappearingMode_CHANGED_IN_CHAT.Enum(),
+			Trigger:       waE2E.DisappearingMode_CHAT_SETTING.Enum(),
+			InitiatedByMe: proto.Bool(false),
+			Expiration:    group.DisappearingTimer,
+		},
 	}
-	return storage.NotEphemeral(jid), nil
+	return setting, nil
+}
+
+func (gows *GoWS) getChatEphemeralSettings(jid types.JID) (*storage.StoredChatEphemeralSetting, error) {
+	setting, err := gows.Storage.ChatEphemeralSetting.GetChatEphemeralSetting(jid)
+	if errors.Is(err, storage.ErrNotFound) {
+		return storage.NotEphemeral(jid), nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if setting == nil {
+		return storage.NotEphemeral(jid), nil
+	}
+	return setting, nil
 }
 
 // ExtractEphemeralSettingsFromMsg extracts ephemeral settings from a message event (from the initial message).
