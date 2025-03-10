@@ -97,7 +97,7 @@ func (gows *GoWS) ExtractEphemeralSettingsFromMsg(event *events.Message) *storag
 	if contextInfo == nil {
 		return nil
 	}
-	if contextInfo.Expiration == nil {
+	if contextInfo.Expiration == nil || contextInfo.DisappearingMode == nil {
 		return nil
 	}
 
@@ -125,7 +125,7 @@ func (gows *GoWS) ExtractEphemeralSettingsChanged(event *events.Message) *storag
 		var setting *storage.StoredChatEphemeralSetting
 		setting = storage.NotEphemeral(event.Info.Chat)
 		isEphemeral := protocol.EphemeralExpiration != nil && *protocol.EphemeralExpiration > 0
-		if isEphemeral {
+		if isEphemeral && protocol.DisappearingMode != nil {
 			setting.IsEphemeral = true
 			timestamp := event.Info.Timestamp.Unix()
 			setting.Setting = &storage.EphemeralSetting{
