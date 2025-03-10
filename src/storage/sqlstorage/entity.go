@@ -1,7 +1,6 @@
 package sqlstorage
 
 import (
-	"errors"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/devlikeapro/gows/storage"
 	"github.com/jmoiron/sqlx"
@@ -133,7 +132,7 @@ func (kv *EntityRepository[Entity]) GetBy(conditions []sq.Sqlizer) (entity *Enti
 		return nil, err
 	}
 	if len(entities) == 0 {
-		return nil, errors.New("not found")
+		return nil, storage.ErrNotFound
 	}
 	return entities[0], nil
 }

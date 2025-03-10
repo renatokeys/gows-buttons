@@ -92,11 +92,7 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 	switch event.(type) {
 	case *events.Message:
 		msg := event.(*events.Message)
-		saved := st.handleRealMessageEvent(msg)
-		if saved {
-			st.log.Debugf("Stored message %v(%v)", msg.Info.Chat, msg.Info.ID)
-			return
-		}
+		st.handleSaveMessage(msg)
 		st.handleMessageEvent(msg)
 	case *events.Receipt:
 		st.handleReceipt(event.(*events.Receipt))
@@ -114,7 +110,7 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 	}
 }
 
-func (st *GOWSStorage) handleRealMessageEvent(event *events.Message) bool {
+func (st *GOWSStorage) handleSaveMessage(event *events.Message) {
 	var status storage.Status
 	if event.SourceWebMsg != nil && event.SourceWebMsg.Status != nil {
 		status = storage.Status(*event.SourceWebMsg.Status)
@@ -136,7 +132,6 @@ func (st *GOWSStorage) handleRealMessageEvent(event *events.Message) bool {
 	if err != nil {
 		st.log.Errorf("Error storing message %v(%v): %v", event.Info.Chat, event.Info.ID, err)
 	}
-	return true
 }
 
 func (st *GOWSStorage) handleMessageEvent(event *events.Message) {
@@ -147,6 +142,30 @@ func (st *GOWSStorage) handleMessageEvent(event *events.Message) {
 		if err != nil {
 			st.log.Errorf("Error deleting message %v: %v", *event.Message.ProtocolMessage.Key.ID, err)
 		}
+		return
+	}
+
+	// Chat ephemeral settings - changed
+	setting := st.gows.ExtractEphemeralSettingsChanged(event)
+	if setting != nil {
+		err := st.storage.ChatEphemeralSetting.UpsertChatEphemeralSetting(setting)
+		if err != nil {
+			st.log.Errorf("Error updating chat ephemeral setting %v: %v", setting.ID, err)
+		}
+		st.log.Debugf("Changed chat ephemeral setting %v (enabled: %v)", setting.ID, setting.IsEphemeral)
+		return
+	}
+
+	// Chat ephemeral settings - from message
+	setting = st.gows.ExtractEphemeralSettingsFromMsg(event)
+	if setting != nil {
+		err := st.storage.ChatEphemeralSetting.UpsertChatEphemeralSetting(setting)
+		if err != nil {
+			st.log.Errorf("Error updating chat ephemeral setting %v: %v", setting.ID, err)
+		}
+		st.log.Debugf("Initial chat ephemeral setting %v (enabled: %v)", setting.ID, setting.IsEphemeral)
+		// Do not return - we still need to handle the message
+		// return
 	}
 }
 
@@ -202,7 +221,7 @@ func (st *GOWSStorage) saveHistoryForOneChat(conv *waHistorySync.Conversation, c
 			st.log.Errorf("Error parsing message: %v", err)
 			continue
 		}
-		st.handleRealMessageEvent(evt)
+		st.handleSaveMessage(evt)
 	}
 	st.log.Debugf("Saved %v messages in %v", len(conv.GetMessages()), chatJID)
 }

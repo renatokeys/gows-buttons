@@ -12,10 +12,6 @@ import (
 	"time"
 )
 
-var (
-	FetchPreviewTimeout = 6 * time.Second
-)
-
 func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.MessageResponse, error) {
 	cli, err := s.Sm.Get(req.GetSession().GetId())
 	if err != nil {

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	"time"
@@ -34,4 +35,25 @@ type StoredChat struct {
 	Jid                   types.JID
 	Name                  string
 	ConversationTimestamp time.Time
+}
+
+type EphemeralSetting struct {
+	Initiator     *waE2E.DisappearingMode_Initiator
+	Trigger       *waE2E.DisappearingMode_Trigger
+	InitiatedByMe *bool
+	Timestamp     *int64
+	Expiration    uint32
+}
+
+type StoredChatEphemeralSetting struct {
+	ID          types.JID
+	IsEphemeral bool
+	Setting     *EphemeralSetting
+}
+
+func NotEphemeral(jid types.JID) *StoredChatEphemeralSetting {
+	return &StoredChatEphemeralSetting{
+		ID:          jid,
+		IsEphemeral: false,
+	}
 }

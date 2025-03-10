@@ -44,3 +44,18 @@ var GroupTable = Table{
 		"data",
 	},
 }
+
+var ChatEphemeralSettingsTable = Table{
+	Name: "gows_chat_ephemeral_setting",
+	Columns: []string{
+		"id",
+		"data",
+	},
+	DataField: "data",
+	OnConflict: []string{
+		"id",
+	},
+	UpdateOnConflict: []string{
+		"data",
+	},
+}

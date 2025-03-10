@@ -24,10 +24,11 @@ type Pagination struct {
 }
 
 type Storage struct {
-	Messages MessageStorage
-	Contacts ContactStorage
-	Chats    ChatStorage
-	Groups   GroupStorage
+	Messages             MessageStorage
+	Contacts             ContactStorage
+	Chats                ChatStorage
+	Groups               GroupStorage
+	ChatEphemeralSetting ChatEphemeralSettingStorage
 }
 
 type MessageFilter struct {
@@ -64,4 +65,9 @@ type ContactStorage interface {
 
 type ChatStorage interface {
 	GetChats(sortBy Sort, pagination Pagination) ([]*StoredChat, error)
+}
+
+type ChatEphemeralSettingStorage interface {
+	GetChatEphemeralSetting(id types.JID) (*StoredChatEphemeralSetting, error)
+	UpsertChatEphemeralSetting(setting *StoredChatEphemeralSetting) error
 }

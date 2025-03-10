@@ -1,11 +1,11 @@
 package gows
 
 import (
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 	"time"
 )
 
@@ -78,29 +78,43 @@ func (gows *GoWS) PopulateContextInfoWithReply(info *waE2E.ContextInfo, replyToI
 	return info, nil
 }
 
-func (gows *GoWS) PopulateContextInfoDisappearingSettings(info *waE2E.ContextInfo, jid types.JID) (*waE2E.ContextInfo, error) {
-	// Groups
-	if jid.Server == types.GroupServer {
-		group, err := gows.Storage.Groups.GetGroup(jid)
-		if err != nil {
-			return info, err
-		}
-		if group == nil {
-			return info, fmt.Errorf("group not found: %s", jid)
-		}
-		if !group.IsEphemeral {
-			return info, nil
-		}
-
-		if info == nil {
-			info = &waE2E.ContextInfo{}
-		}
-		info.Expiration = proto.Uint32(group.DisappearingTimer)
-		info.DisappearingMode = &waE2E.DisappearingMode{
-			Initiator:     waE2E.DisappearingMode_CHANGED_IN_CHAT.Enum(),
-			Trigger:       waE2E.DisappearingMode_CHAT_SETTING.Enum(),
-			InitiatedByMe: proto.Bool(false),
-		}
+func ExtractContextInfo(event *events.Message) *waE2E.ContextInfo {
+	if event.Message == nil {
+		return nil
 	}
-	return info, nil
+	msg := event.Message
+	switch {
+	case msg.Conversation != nil:
+		return nil
+	case msg.ExtendedTextMessage != nil:
+		return msg.ExtendedTextMessage.ContextInfo
+	case msg.ImageMessage != nil:
+		return msg.ImageMessage.ContextInfo
+	case msg.ContactMessage != nil:
+		return msg.ContactMessage.ContextInfo
+	case msg.LocationMessage != nil:
+		return msg.LocationMessage.ContextInfo
+	case msg.VideoMessage != nil:
+		return msg.VideoMessage.ContextInfo
+	case msg.AudioMessage != nil:
+		return msg.AudioMessage.ContextInfo
+	case msg.DocumentMessage != nil:
+		return msg.DocumentMessage.ContextInfo
+	case msg.StickerMessage != nil:
+		return msg.StickerMessage.ContextInfo
+	case msg.ContactsArrayMessage != nil:
+		return msg.ContactsArrayMessage.ContextInfo
+	case msg.TemplateMessage != nil:
+		return msg.TemplateMessage.ContextInfo
+	case msg.ListMessage != nil:
+		return msg.ListMessage.ContextInfo
+	case msg.PollCreationMessage != nil:
+		return msg.PollCreationMessage.ContextInfo
+	case msg.PollCreationMessageV2 != nil:
+		return msg.PollCreationMessageV2.ContextInfo
+	case msg.PollCreationMessageV3 != nil:
+		return msg.PollCreationMessageV3.ContextInfo
+	default:
+		return nil
+	}
 }
