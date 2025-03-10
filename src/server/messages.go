@@ -223,8 +223,16 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 	if err != nil {
 		return nil, err
 	}
-
-	return &__.MessageResponse{Id: res.ID, Timestamp: res.Timestamp.Unix()}, nil
+	data, err := toJson(res)
+	if err != nil {
+		s.log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+	}
+	msg := __.MessageResponse{
+		Id:        res.Info.ID,
+		Timestamp: res.Info.Timestamp.Unix(),
+		Message:   data,
+	}
+	return &msg, nil
 }
 
 func (s *Server) SendReaction(ctx context.Context, req *__.MessageReaction) (*__.MessageResponse, error) {
@@ -240,8 +248,16 @@ func (s *Server) SendReaction(ctx context.Context, req *__.MessageReaction) (*__
 	if err != nil {
 		return nil, err
 	}
-
-	return &__.MessageResponse{Id: res.ID, Timestamp: res.Timestamp.Unix()}, nil
+	data, err := toJson(res)
+	if err != nil {
+		s.log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+	}
+	msg := __.MessageResponse{
+		Id:        res.Info.ID,
+		Timestamp: res.Info.Timestamp.Unix(),
+		Message:   data,
+	}
+	return &msg, nil
 }
 
 func (s *Server) MarkRead(ctx context.Context, req *__.MarkReadRequest) (*__.Empty, error) {
@@ -299,12 +315,22 @@ func (s *Server) RevokeMessage(ctx context.Context, req *__.RevokeMessageRequest
 		participantJid = *cli.Store.ID
 	}
 
-	msg := cli.BuildRevoke(jid, participantJid, req.MessageId)
-	res, err := cli.SendMessage(ctx, jid, msg)
+	message := cli.BuildRevoke(jid, participantJid, req.MessageId)
+	res, err := cli.SendMessage(ctx, jid, message)
 	if err != nil {
 		return nil, err
 	}
-	return &__.MessageResponse{Id: res.ID, Timestamp: res.Timestamp.Unix()}, nil
+
+	data, err := toJson(res)
+	if err != nil {
+		s.log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+	}
+	msg := __.MessageResponse{
+		Id:        res.Info.ID,
+		Timestamp: res.Info.Timestamp.Unix(),
+		Message:   data,
+	}
+	return &msg, nil
 }
 
 func (s *Server) EditMessage(ctx context.Context, req *__.EditMessageRequest) (*__.MessageResponse, error) {
@@ -329,5 +355,15 @@ func (s *Server) EditMessage(ctx context.Context, req *__.EditMessageRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	return &__.MessageResponse{Id: res.ID, Timestamp: res.Timestamp.Unix()}, nil
+
+	data, err := toJson(res)
+	if err != nil {
+		s.log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+	}
+	msg := __.MessageResponse{
+		Id:        res.Info.ID,
+		Timestamp: res.Info.Timestamp.Unix(),
+		Message:   data,
+	}
+	return &msg, nil
 }

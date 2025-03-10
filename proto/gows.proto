@@ -290,6 +290,7 @@ message MessageReaction {
 message MessageResponse {
   string id = 1;
   int64 timestamp = 2;
+  Json message = 3;
 }
 
 message ProfilePictureRequest {

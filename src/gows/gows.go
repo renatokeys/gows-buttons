@@ -159,10 +159,10 @@ func (gows *GoWS) GetEventChannel() <-chan interface{} {
 	return gows.events
 }
 
-func (gows *GoWS) SendMessage(ctx context.Context, to types.JID, msg *waE2E.Message, extra ...whatsmeow.SendRequestExtra) (resp whatsmeow.SendResponse, err error) {
-	resp, err = gows.Client.SendMessage(ctx, to, msg, extra...)
+func (gows *GoWS) SendMessage(ctx context.Context, to types.JID, msg *waE2E.Message, extra ...whatsmeow.SendRequestExtra) (message *events.Message, err error) {
+	resp, err := gows.Client.SendMessage(ctx, to, msg, extra...)
 	if err != nil {
-		return
+		return nil, err
 	}
 	info := &types.MessageInfo{
 		MessageSource: types.MessageSource{
@@ -177,5 +177,5 @@ func (gows *GoWS) SendMessage(ctx context.Context, to types.JID, msg *waE2E.Mess
 	}
 	evt := &events.Message{Info: *info, Message: msg, RawMessage: msg}
 	go gows.handleEvent(evt)
-	return
+	return evt, nil
 }
