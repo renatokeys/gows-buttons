@@ -17,13 +17,6 @@ type GOWSStorage struct {
 	storage *storage.Storage
 }
 
-func (st *GOWSStorage) GetCachedGroupStorage() storage.GroupStorage {
-	return NewGroupCacheStorage(
-		st.storage.Groups,
-		st.gows,
-	)
-}
-
 func (st *GOWSStorage) GetMessageForRetry(requester, to types.JID, id types.MessageID) *waE2E.Message {
 	msg, err := st.storage.Messages.GetMessage(id)
 	if err != nil {
