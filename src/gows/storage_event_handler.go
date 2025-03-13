@@ -11,13 +11,13 @@ import (
 	"runtime/debug"
 )
 
-type GOWSStorage struct {
+type StorageEventHandler struct {
 	gows    *GoWS
 	log     waLog.Logger
 	storage *storage.Storage
 }
 
-func (st *GOWSStorage) GetMessageForRetry(requester, to types.JID, id types.MessageID) *waE2E.Message {
+func (st *StorageEventHandler) GetMessageForRetry(requester, to types.JID, id types.MessageID) *waE2E.Message {
 	msg, err := st.storage.Messages.GetMessage(id)
 	if err != nil {
 		st.log.Errorf("Error getting message for retry - requester %v, to %v, id %v: %v", requester, to, id, err)
@@ -73,7 +73,7 @@ func isRealMessage(event *events.Message) bool {
 	}
 }
 
-func (st *GOWSStorage) handleEvent(event interface{}) {
+func (st *StorageEventHandler) handleEvent(event interface{}) {
 	// Handle all panic and log error + stack
 	defer func() {
 		if err := recover(); err != nil {
@@ -105,7 +105,7 @@ func (st *GOWSStorage) handleEvent(event interface{}) {
 	}
 }
 
-func (st *GOWSStorage) handleSaveMessage(event *events.Message) {
+func (st *StorageEventHandler) handleSaveMessage(event *events.Message) {
 	var status storage.Status
 	if event.SourceWebMsg != nil && event.SourceWebMsg.Status != nil {
 		status = storage.Status(*event.SourceWebMsg.Status)
@@ -129,7 +129,7 @@ func (st *GOWSStorage) handleSaveMessage(event *events.Message) {
 	}
 }
 
-func (st *GOWSStorage) handleMessageEvent(event *events.Message) {
+func (st *StorageEventHandler) handleMessageEvent(event *events.Message) {
 	// Revoked message
 	isRevoked := event.Message.ProtocolMessage != nil && *event.Message.ProtocolMessage.Type == waE2E.ProtocolMessage_REVOKE
 	if isRevoked {
@@ -164,7 +164,7 @@ func (st *GOWSStorage) handleMessageEvent(event *events.Message) {
 	}
 }
 
-func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
+func (st *StorageEventHandler) handleReceipt(event *events.Receipt) {
 	var status storage.Status
 	switch event.Type {
 	case types.ReceiptTypeDelivered:
@@ -197,7 +197,7 @@ func (st *GOWSStorage) handleReceipt(event *events.Receipt) {
 	}
 }
 
-func (st *GOWSStorage) handleHistorySync(event *events.HistorySync) {
+func (st *StorageEventHandler) handleHistorySync(event *events.HistorySync) {
 	for _, conv := range event.Data.Conversations {
 		jid, err := types.ParseJID(conv.GetId())
 		if err != nil {
@@ -209,7 +209,7 @@ func (st *GOWSStorage) handleHistorySync(event *events.HistorySync) {
 	st.log.Debugf("Saved history for %v chats", len(event.Data.Conversations))
 }
 
-func (st *GOWSStorage) saveHistoryForOneChat(conv *waHistorySync.Conversation, chatJID types.JID) {
+func (st *StorageEventHandler) saveHistoryForOneChat(conv *waHistorySync.Conversation, chatJID types.JID) {
 	for _, historyMsg := range conv.GetMessages() {
 		evt, err := st.gows.ParseWebMessage(chatJID, historyMsg.GetMessage())
 		if err != nil {
@@ -230,7 +230,7 @@ func (st *GOWSStorage) saveHistoryForOneChat(conv *waHistorySync.Conversation, c
 	}
 }
 
-func (st *GOWSStorage) handleMeJoinedGroup(group *events.JoinedGroup) {
+func (st *StorageEventHandler) handleMeJoinedGroup(group *events.JoinedGroup) {
 	err := st.storage.Groups.UpsertOneGroup(&group.GroupInfo)
 	if err != nil {
 		st.log.Errorf("Error storing group %v: %v", group.JID, err)
@@ -238,7 +238,7 @@ func (st *GOWSStorage) handleMeJoinedGroup(group *events.JoinedGroup) {
 	st.log.Debugf("I joined group %v", group.JID)
 }
 
-func (st *GOWSStorage) handleMeLeftGroup(info *events.GroupInfo) bool {
+func (st *StorageEventHandler) handleMeLeftGroup(info *events.GroupInfo) bool {
 	jid := st.gows.Store.ID
 	for _, leave := range info.Leave {
 		if leave == jid.ToNonAD() {
@@ -253,7 +253,7 @@ func (st *GOWSStorage) handleMeLeftGroup(info *events.GroupInfo) bool {
 	return false
 }
 
-func (st *GOWSStorage) handleGroupInfo(info *events.GroupInfo) {
+func (st *StorageEventHandler) handleGroupInfo(info *events.GroupInfo) {
 	err := retry.Do(func() error {
 		return st.storage.Groups.UpdateGroup(info)
 	})
@@ -263,7 +263,7 @@ func (st *GOWSStorage) handleGroupInfo(info *events.GroupInfo) {
 	return
 }
 
-func (st *GOWSStorage) handleDeleteChat(event *events.DeleteChat) {
+func (st *StorageEventHandler) handleDeleteChat(event *events.DeleteChat) {
 	err := st.storage.Messages.DeleteChatMessages(event.JID)
 	if err != nil {
 		st.log.Errorf("Error deleting chat messages %v: %v", event.JID, err)

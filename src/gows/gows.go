@@ -3,9 +3,7 @@ package gows
 import (
 	"context"
 	"github.com/devlikeapro/gows/storage"
-	meowstorage "github.com/devlikeapro/gows/storage/meow"
 	"github.com/devlikeapro/gows/storage/sqlstorage"
-	"github.com/devlikeapro/gows/storage/views"
 	_ "github.com/jackc/pgx/v5"     // Import the Postgres driver
 	_ "github.com/mattn/go-sqlite3" // Import the SQLite driver
 	"go.mau.fi/whatsmeow"
@@ -22,10 +20,10 @@ type GoWS struct {
 	Context context.Context
 	Storage *storage.Storage
 
-	events        chan interface{}
-	cancelContext context.CancelFunc
-	container     *sqlstorage.GContainer
-	st            *GOWSStorage
+	events              chan interface{}
+	cancelContext       context.CancelFunc
+	container           *sqlstorage.GContainer
+	storageEventHandler *StorageEventHandler
 }
 
 func (gows *GoWS) reissueEvent(event interface{}) {
@@ -52,7 +50,7 @@ func (gows *GoWS) reissueEvent(event interface{}) {
 
 func (gows *GoWS) handleEvent(event interface{}) {
 	go gows.reissueEvent(event)
-	go gows.st.handleEvent(event)
+	go gows.storageEventHandler.handleEvent(event)
 }
 
 func (gows *GoWS) Start() error {
@@ -131,7 +129,7 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 	client.EmitAppStateEventsOnFullSync = true
 
 	ctx, cancel := context.WithCancel(ctx)
-	gows := GoWS{
+	gows := &GoWS{
 		client,
 		client.DangerousInternals(),
 		ctx,
@@ -141,18 +139,14 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 		container,
 		nil,
 	}
-	storage := container.NewStorage()
-	storage.Contacts = meowstorage.NewContactStorage(gows.Store)
-	gows.Storage = storage
-	gows.st = &GOWSStorage{
-		gows:    &gows,
+	gows.Storage = BuildStorage(container, gows)
+	gows.storageEventHandler = &StorageEventHandler{
+		gows:    gows,
 		log:     gows.Log.Sub("Storage"),
 		storage: gows.Storage,
 	}
-	gows.Storage.Groups = NewGroupCacheStorage(storage.Groups, &gows)
-	storage.Chats = views.NewChatView(storage.Messages, storage.Contacts, storage.Groups)
-	gows.GetMessageForRetry = gows.st.GetMessageForRetry
-	return &gows, nil
+	gows.GetMessageForRetry = gows.storageEventHandler.GetMessageForRetry
+	return gows, nil
 }
 
 func (gows *GoWS) GetEventChannel() <-chan interface{} {
