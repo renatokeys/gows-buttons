@@ -8,15 +8,15 @@ import (
 	"sort"
 )
 
-var _ storage.ContactStorage = (*SqlContactStorage)(nil)
+var _ storage.ContactStorage = (*MeowContactStorage)(nil)
 
-func NewContactStorage(store *store.Device) *SqlContactStorage {
-	return &SqlContactStorage{
+func NewContactStorage(store *store.Device) *MeowContactStorage {
+	return &MeowContactStorage{
 		store,
 	}
 }
 
-type SqlContactStorage struct {
+type MeowContactStorage struct {
 	store *store.Device
 }
 
@@ -28,7 +28,7 @@ func toContact(jid types.JID, info types.ContactInfo) *storage.StoredContact {
 	}
 }
 
-func (s SqlContactStorage) GetContact(user types.JID) (*storage.StoredContact, error) {
+func (s MeowContactStorage) GetContact(user types.JID) (*storage.StoredContact, error) {
 	contactInfo, err := s.store.Contacts.GetContact(user)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (s SqlContactStorage) GetContact(user types.JID) (*storage.StoredContact, e
 	return contact, nil
 }
 
-func (s SqlContactStorage) GetAllContacts(sortBy storage.Sort, pagination storage.Pagination) ([]*storage.StoredContact, error) {
+func (s MeowContactStorage) GetAllContacts(sortBy storage.Sort, pagination storage.Pagination) ([]*storage.StoredContact, error) {
 	contactInfos, err := s.store.Contacts.GetAllContacts()
 	if err != nil {
 		return nil, err
