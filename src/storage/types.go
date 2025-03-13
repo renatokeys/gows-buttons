@@ -57,3 +57,20 @@ func NotEphemeral(jid types.JID) *StoredChatEphemeralSetting {
 		IsEphemeral: false,
 	}
 }
+
+type SortOrder string
+
+const (
+	SortAsc  SortOrder = "ASC"
+	SortDesc SortOrder = "DESC"
+)
+
+type Sort struct {
+	Field string
+	Order SortOrder
+}
+
+type Pagination struct {
+	Offset uint64
+	Limit  uint64
+}

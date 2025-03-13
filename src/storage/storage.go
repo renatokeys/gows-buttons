@@ -6,23 +6,6 @@ import (
 	"time"
 )
 
-type SortOrder string
-
-const (
-	SortAsc  SortOrder = "ASC"
-	SortDesc SortOrder = "DESC"
-)
-
-type Sort struct {
-	Field string
-	Order SortOrder
-}
-
-type Pagination struct {
-	Offset uint64
-	Limit  uint64
-}
-
 type Storage struct {
 	Messages             MessageStorage
 	Contacts             ContactStorage
