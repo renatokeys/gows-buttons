@@ -2,6 +2,7 @@ package gows
 
 import (
 	"github.com/devlikeapro/gows/storage"
+	"github.com/devlikeapro/gows/storage/helpers"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -56,7 +57,7 @@ func (g *GroupCacheStorage) UpdateGroup(update *events.GroupInfo) (err error) {
 	if err != nil {
 		return err
 	}
-	err = storage.UpdateGroupInfo(group, update)
+	err = helpers.UpdateGroupInfo(group, update)
 	if err != nil {
 		return err
 	}

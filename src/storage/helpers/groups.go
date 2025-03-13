@@ -1,8 +1,7 @@
-package storage
+package helpers
 
 import (
 	"errors"
-	"github.com/devlikeapro/gows/storage/helpers"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 )
@@ -52,7 +51,7 @@ func updateGroupParticipants(group *types.GroupInfo, update *events.GroupInfo) e
 		return ErrMismatchedParticipantVersion
 	}
 
-	pm := helpers.NewParticipantsMap(group.Participants)
+	pm := NewParticipantsMap(group.Participants)
 	pm.Join(update.Join)
 	pm.Leave(update.Leave)
 	pm.Promote(update.Promote)
