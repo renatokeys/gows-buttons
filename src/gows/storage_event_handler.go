@@ -143,7 +143,7 @@ func (st *StorageEventHandler) handleMessageEvent(event *events.Message) {
 	// Chat ephemeral settings - changed
 	setting := st.gows.ExtractEphemeralSettingsChanged(event)
 	if setting != nil {
-		err := st.storage.ChatEphemeralSetting.UpsertChatEphemeralSetting(setting)
+		err := st.storage.ChatEphemeralSetting.UpdateChatEphemeralSetting(setting)
 		if err != nil {
 			st.log.Errorf("Error updating chat ephemeral setting %v: %v", setting.ID, err)
 		}
@@ -154,7 +154,7 @@ func (st *StorageEventHandler) handleMessageEvent(event *events.Message) {
 	// Chat ephemeral settings - from message
 	setting = st.gows.ExtractEphemeralSettingsFromMsg(event)
 	if setting != nil {
-		err := st.storage.ChatEphemeralSetting.UpsertChatEphemeralSetting(setting)
+		err := st.storage.ChatEphemeralSetting.UpdateChatEphemeralSetting(setting)
 		if err != nil {
 			st.log.Errorf("Error updating chat ephemeral setting %v: %v", setting.ID, err)
 		}
@@ -222,7 +222,7 @@ func (st *StorageEventHandler) saveHistoryForOneChat(conv *waHistorySync.Convers
 
 	setting := st.gows.ExtractEphemeralSettingsFromConversation(conv, chatJID)
 	if setting != nil {
-		err := st.storage.ChatEphemeralSetting.UpsertChatEphemeralSetting(setting)
+		err := st.storage.ChatEphemeralSetting.UpdateChatEphemeralSetting(setting)
 		if err != nil {
 			st.log.Errorf("Error updating chat ephemeral setting %v: %v", setting.ID, err)
 		}

@@ -52,6 +52,6 @@ type ChatStorage interface {
 
 type ChatEphemeralSettingStorage interface {
 	GetChatEphemeralSetting(id types.JID) (*StoredChatEphemeralSetting, error)
-	UpsertChatEphemeralSetting(setting *StoredChatEphemeralSetting) error
+	UpdateChatEphemeralSetting(setting *StoredChatEphemeralSetting) error
 	DeleteChatEphemeralSetting(id types.JID) error
 }

@@ -26,8 +26,12 @@ func (s *SqlChatEphemeralSettingStore) GetChatEphemeralSetting(id types.JID) (*s
 	return s.GetById(id.String())
 }
 
-func (s *SqlChatEphemeralSettingStore) UpsertChatEphemeralSetting(setting *storage.StoredChatEphemeralSetting) error {
-	return s.UpsertOne(setting)
+func (s *SqlChatEphemeralSettingStore) UpdateChatEphemeralSetting(setting *storage.StoredChatEphemeralSetting) error {
+	if setting.IsEphemeral {
+		return s.UpsertOne(setting)
+	} else {
+		return s.DeleteChatEphemeralSetting(setting.ID)
+	}
 }
 
 func (s *SqlChatEphemeralSettingStore) DeleteChatEphemeralSetting(id types.JID) error {
