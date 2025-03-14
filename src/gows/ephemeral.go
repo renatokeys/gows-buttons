@@ -1,7 +1,6 @@
 package gows
 
 import (
-	"errors"
 	"github.com/devlikeapro/gows/storage"
 	"github.com/golang/protobuf/proto"
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -15,7 +14,9 @@ func (gows *GoWS) PopulateContextInfoDisappearingSettings(info *waE2E.ContextInf
 	if err != nil {
 		return info, err
 	}
-
+	if setting == nil {
+		return info, nil
+	}
 	if !setting.IsEphemeral {
 		return info, nil
 	}
@@ -45,15 +46,12 @@ func (gows *GoWS) getEphemeralSettings(jid types.JID) (*storage.StoredChatEpheme
 	case jid.Server == types.DefaultUserServer || jid.Server == types.HiddenUserServer:
 		return gows.getChatEphemeralSettings(jid)
 	default:
-		return storage.NotEphemeral(jid), nil
+		return nil, nil
 	}
 }
 
 func (gows *GoWS) getGroupEphemeralSettings(jid types.JID) (*storage.StoredChatEphemeralSetting, error) {
 	group, err := gows.Storage.Groups.GetGroup(jid)
-	if errors.Is(err, storage.ErrNotFound) {
-		return storage.NotEphemeral(jid), nil
-	}
 	if err != nil {
 		return nil, err
 	}
@@ -63,9 +61,6 @@ func (gows *GoWS) getGroupEphemeralSettings(jid types.JID) (*storage.StoredChatE
 
 func (gows *GoWS) getChatEphemeralSettings(jid types.JID) (*storage.StoredChatEphemeralSetting, error) {
 	setting, err := gows.Storage.ChatEphemeralSetting.GetChatEphemeralSetting(jid)
-	if errors.Is(err, storage.ErrNotFound) {
-		return storage.NotEphemeral(jid), nil
-	}
 	if err != nil {
 		return nil, err
 	}
