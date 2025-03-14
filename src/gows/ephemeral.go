@@ -57,20 +57,7 @@ func (gows *GoWS) getGroupEphemeralSettings(jid types.JID) (*storage.StoredChatE
 	if err != nil {
 		return nil, err
 	}
-	if !group.IsEphemeral {
-		return storage.NotEphemeral(jid), nil
-	}
-
-	setting := &storage.StoredChatEphemeralSetting{
-		ID:          jid,
-		IsEphemeral: true,
-		Setting: &storage.EphemeralSetting{
-			Initiator:     waE2E.DisappearingMode_CHANGED_IN_CHAT.Enum(),
-			Trigger:       waE2E.DisappearingMode_CHAT_SETTING.Enum(),
-			InitiatedByMe: proto.Bool(false),
-			Expiration:    group.DisappearingTimer,
-		},
-	}
+	setting := ExtractEphemeralSettingsFromGroup(group)
 	return setting, nil
 }
 
@@ -149,6 +136,24 @@ func ExtractEphemeralSettingsFromConversation(conv *waHistorySync.Conversation, 
 		Trigger:       conv.DisappearingMode.Trigger,
 		InitiatedByMe: conv.DisappearingMode.InitiatedByMe,
 		Timestamp:     conv.EphemeralSettingTimestamp,
+	}
+	return setting
+}
+
+func ExtractEphemeralSettingsFromGroup(group *types.GroupInfo) *storage.StoredChatEphemeralSetting {
+	if !group.IsEphemeral {
+		return storage.NotEphemeral(group.JID)
+	}
+
+	setting := &storage.StoredChatEphemeralSetting{
+		ID:          group.JID,
+		IsEphemeral: true,
+		Setting: &storage.EphemeralSetting{
+			Initiator:     waE2E.DisappearingMode_CHANGED_IN_CHAT.Enum(),
+			Trigger:       waE2E.DisappearingMode_CHAT_SETTING.Enum(),
+			InitiatedByMe: proto.Bool(false),
+			Expiration:    group.DisappearingTimer,
+		},
 	}
 	return setting
 }
