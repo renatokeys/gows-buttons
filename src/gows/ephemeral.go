@@ -89,7 +89,7 @@ func (gows *GoWS) getChatEphemeralSettings(jid types.JID) (*storage.StoredChatEp
 }
 
 // ExtractEphemeralSettingsFromMsg extracts ephemeral settings from a message event (from the initial message).
-func (gows *GoWS) ExtractEphemeralSettingsFromMsg(event *events.Message) *storage.StoredChatEphemeralSetting {
+func ExtractEphemeralSettingsFromMsg(event *events.Message) *storage.StoredChatEphemeralSetting {
 	if event.Info.Chat.Server != types.DefaultUserServer && event.Info.Chat.Server != types.HiddenUserServer {
 		return nil
 	}
@@ -114,7 +114,7 @@ func (gows *GoWS) ExtractEphemeralSettingsFromMsg(event *events.Message) *storag
 }
 
 // ExtractEphemeralSettingsChanged extracts ephemeral settings from a message event.
-func (gows *GoWS) ExtractEphemeralSettingsChanged(event *events.Message) *storage.StoredChatEphemeralSetting {
+func ExtractEphemeralSettingsChanged(event *events.Message) *storage.StoredChatEphemeralSetting {
 	if event.Message == nil || event.Message.ProtocolMessage == nil {
 		return nil
 	}
@@ -142,7 +142,7 @@ func (gows *GoWS) ExtractEphemeralSettingsChanged(event *events.Message) *storag
 	}
 }
 
-func (gows *GoWS) ExtractEphemeralSettingsFromConversation(conv *waHistorySync.Conversation, jid types.JID) *storage.StoredChatEphemeralSetting {
+func ExtractEphemeralSettingsFromConversation(conv *waHistorySync.Conversation, jid types.JID) *storage.StoredChatEphemeralSetting {
 	if conv.EphemeralExpiration == nil || *conv.EphemeralExpiration == 0 {
 		return nil
 	}
