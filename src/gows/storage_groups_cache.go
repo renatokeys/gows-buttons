@@ -77,7 +77,7 @@ func (g *GroupCacheStorage) fetchGroupsUnlocked() error {
 	for _, group := range groups {
 		err = g.groups.UpsertOneGroup(group)
 		if err != nil {
-			return err
+			g.log.Errorf("Error upserting group %s: %v", group.JID, err)
 		}
 	}
 	g.lastTimeRefreshed = time.Now()
