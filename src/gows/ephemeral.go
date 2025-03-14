@@ -1,6 +1,7 @@
 package gows
 
 import (
+	"errors"
 	"github.com/devlikeapro/gows/storage"
 	"github.com/golang/protobuf/proto"
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -11,6 +12,10 @@ import (
 
 func (gows *GoWS) PopulateContextInfoDisappearingSettings(info *waE2E.ContextInfo, jid types.JID) (*waE2E.ContextInfo, error) {
 	setting, err := gows.getEphemeralSettings(jid)
+	if errors.Is(err, storage.ErrNotFound) {
+		gows.Log.Debugf("Ephemeral settings not found for %s", jid)
+		return info, nil
+	}
 	if err != nil {
 		return info, err
 	}
@@ -43,7 +48,7 @@ func (gows *GoWS) getEphemeralSettings(jid types.JID) (*storage.StoredChatEpheme
 	if jid.Server == types.GroupServer {
 		err := gows.Storage.Groups.FetchGroups(false)
 		if err != nil {
-			gows.Log.Warnf("Error fetching groups for ephemeral settings: %v", err)
+			gows.Log.Warnf("Failed fetching groups for ephemeral settings: %v", err)
 		}
 	}
 
