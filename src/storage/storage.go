@@ -32,7 +32,7 @@ type MessageStorage interface {
 }
 
 type GroupStorage interface {
-	FetchGroups() error
+	FetchGroups(force bool) error
 	UpdateGroup(update *events.GroupInfo) error
 	UpsertOneGroup(group *types.GroupInfo) error
 	GetAllGroups(sort Sort, pagination Pagination) ([]*types.GroupInfo, error)

@@ -25,7 +25,7 @@ type SqlGroupStore struct {
 
 var _ storage.GroupStorage = (*SqlGroupStore)(nil)
 
-func (s SqlGroupStore) FetchGroups() error {
+func (s SqlGroupStore) FetchGroups(force bool) error {
 	return fmt.Errorf("not implemented, use GroupCacheStorage as a wrapper")
 }
 

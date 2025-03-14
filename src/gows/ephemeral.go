@@ -40,34 +40,22 @@ func (gows *GoWS) PopulateContextInfoDisappearingSettings(info *waE2E.ContextInf
 }
 
 func (gows *GoWS) getEphemeralSettings(jid types.JID) (*storage.StoredChatEphemeralSetting, error) {
-	switch {
-	case jid.Server == types.GroupServer:
-		return gows.getGroupEphemeralSettings(jid)
-	case jid.Server == types.DefaultUserServer || jid.Server == types.HiddenUserServer:
-		return gows.getChatEphemeralSettings(jid)
-	default:
-		return nil, nil
+	if jid.Server == types.GroupServer {
+		err := gows.Storage.Groups.FetchGroups(false)
+		if err != nil {
+			gows.Log.Warnf("Error fetching groups for ephemeral settings: %v", err)
+		}
 	}
-}
 
-func (gows *GoWS) getGroupEphemeralSettings(jid types.JID) (*storage.StoredChatEphemeralSetting, error) {
-	group, err := gows.Storage.Groups.GetGroup(jid)
-	if err != nil {
-		return nil, err
+	switch jid.Server {
+	case types.DefaultUserServer, types.HiddenUserServer, types.GroupServer:
+		setting, err := gows.Storage.ChatEphemeralSetting.GetChatEphemeralSetting(jid)
+		if err != nil {
+			return nil, err
+		}
+		return setting, nil
 	}
-	setting := ExtractEphemeralSettingsFromGroup(group)
-	return setting, nil
-}
-
-func (gows *GoWS) getChatEphemeralSettings(jid types.JID) (*storage.StoredChatEphemeralSetting, error) {
-	setting, err := gows.Storage.ChatEphemeralSetting.GetChatEphemeralSetting(jid)
-	if err != nil {
-		return nil, err
-	}
-	if setting == nil {
-		return storage.NotEphemeral(jid), nil
-	}
-	return setting, nil
+	return nil, nil
 }
 
 // ExtractEphemeralSettingsFromMsg extracts ephemeral settings from a message event (from the initial message).

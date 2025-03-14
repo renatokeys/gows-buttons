@@ -13,7 +13,7 @@ func BuildStorage(container *sqlstorage.GContainer, gows *GoWS) *storage.Storage
 	st.Groups = container.NewGroupStorage()
 	st.ChatEphemeralSetting = container.NewChatEphemeralSettingStorage()
 	st.Contacts = meowstorage.NewContactStorage(gows.Store)
-	st.Groups = NewGroupCacheStorage(st.Groups, gows)
+	st.Groups = NewGroupCacheStorage(gows, st.Groups, st.ChatEphemeralSetting)
 	st.Chats = views.NewChatView(st.Messages, st.Contacts, st.Groups)
 	return st
 }

@@ -28,7 +28,7 @@ func (s *Server) FetchGroups(ctx context.Context, req *__.Session) (*__.Empty, e
 	if err != nil {
 		return nil, err
 	}
-	err = cli.Storage.Groups.FetchGroups()
+	err = cli.Storage.Groups.FetchGroups(true)
 	if err != nil {
 		return nil, err
 	}

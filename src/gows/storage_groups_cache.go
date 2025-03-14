@@ -13,8 +13,9 @@ import (
 const refreshInterval = 24 * time.Hour
 
 type GroupCacheStorage struct {
-	groups storage.GroupStorage
-	gows   *GoWS
+	gows                 *GoWS
+	groups               storage.GroupStorage
+	chatEphemeralSetting storage.ChatEphemeralSettingStorage
 
 	lastTimeRefreshed time.Time
 	lock              sync.Mutex
@@ -22,11 +23,12 @@ type GroupCacheStorage struct {
 	log waLog.Logger
 }
 
-func NewGroupCacheStorage(groups storage.GroupStorage, gows *GoWS) *GroupCacheStorage {
+func NewGroupCacheStorage(gows *GoWS, groups storage.GroupStorage, chatEphemeralSetting storage.ChatEphemeralSettingStorage) *GroupCacheStorage {
 	return &GroupCacheStorage{
-		groups: groups,
-		gows:   gows,
-		log:    gows.Log.Sub("GroupCacheStorage"),
+		groups:               groups,
+		gows:                 gows,
+		chatEphemeralSetting: chatEphemeralSetting,
+		log:                  gows.Log.Sub("GroupCacheStorage"),
 	}
 }
 
@@ -36,7 +38,7 @@ func (g *GroupCacheStorage) shouldRefresh() bool {
 	return time.Since(g.lastTimeRefreshed) > refreshInterval
 }
 
-func (g *GroupCacheStorage) FetchGroups() error {
+func (g *GroupCacheStorage) FetchGroups(bool) error {
 	g.lock.Lock()
 	defer g.lock.Unlock()
 	return g.fetchGroupsUnlocked()
@@ -61,6 +63,13 @@ func (g *GroupCacheStorage) UpdateGroup(update *events.GroupInfo) (err error) {
 	if err != nil {
 		return err
 	}
+	if update.Ephemeral != nil {
+		setting := ExtractEphemeralSettingsFromGroup(group)
+		err = g.chatEphemeralSetting.UpdateChatEphemeralSetting(setting)
+		if err != nil {
+			g.log.Warnf("Updating chat ephemeral setting for group failed %v: %v", setting.ID, err)
+		}
+	}
 	return g.groups.UpsertOneGroup(group)
 }
 
@@ -75,7 +84,7 @@ func (g *GroupCacheStorage) fetchGroupsUnlocked() error {
 		return err
 	}
 	for _, group := range groups {
-		err = g.groups.UpsertOneGroup(group)
+		err = g.UpsertOneGroup(group)
 		if err != nil {
 			g.log.Errorf("Error upserting group %s: %v", group.JID, err)
 		}
@@ -99,6 +108,11 @@ func (g *GroupCacheStorage) fetchGroupsIfNeeded(lock bool) (bool, error) {
 }
 
 func (g *GroupCacheStorage) UpsertOneGroup(group *types.GroupInfo) error {
+	setting := ExtractEphemeralSettingsFromGroup(group)
+	err := g.chatEphemeralSetting.UpdateChatEphemeralSetting(setting)
+	if err != nil {
+		g.log.Warnf("Upserting chat ephemeral setting for group failed %v: %v", setting.ID, err)
+	}
 	return g.groups.UpsertOneGroup(group)
 }
 
@@ -119,6 +133,10 @@ func (g *GroupCacheStorage) GetGroup(jid types.JID) (*types.GroupInfo, error) {
 }
 
 func (g *GroupCacheStorage) DeleteGroup(jid types.JID) error {
+	err := g.chatEphemeralSetting.DeleteChatEphemeralSetting(jid)
+	if err != nil {
+		g.log.Warnf("Deleting chat ephemeral setting for group failed %v: %v", jid, err)
+	}
 	return g.groups.DeleteGroup(jid)
 }
 
