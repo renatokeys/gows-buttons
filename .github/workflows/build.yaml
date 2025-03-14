@@ -8,7 +8,7 @@ on:
 env:
   TARGET_REPO: devlikeapro/gows
   PROTO_SRC_DIR: proto
-  GO_VERSION: 1.24.1
+  GO_VERSION: 1.23.3
 
 jobs:
   build-binaries:
@@ -27,11 +27,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Setup Go ${{ env.GO_VERSION }}
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
 
       - name: Build
         run: |
