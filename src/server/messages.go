@@ -26,13 +26,13 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 
 	contextInfo, err = cli.PopulateContextInfoDisappearingSettings(contextInfo, jid)
 	if err != nil {
-		s.log.Warnf("Failed to populate context info with disappearing settings: %v", err)
+		cli.Log.Warnf("Failed to get disappearing settings: %v", err)
 	}
 
 	if req.ReplyTo != "" {
 		contextInfo, err = cli.PopulateContextInfoWithReply(contextInfo, req.ReplyTo)
 		if err != nil {
-			s.log.Warnf("Failed to get message for reply: %v", err)
+			cli.Log.Warnf("Failed to get message for reply: %v", err)
 		}
 	}
 
@@ -78,7 +78,7 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 			// Generate Thumbnail
 			thumbnail, err := media.ImageThumbnail(req.Media.Content)
 			if err != nil {
-				s.log.Errorf("Failed to generate thumbnail: %v", err)
+				cli.Log.Errorf("Failed to generate thumbnail: %v", err)
 			}
 			// Attach
 			message.ImageMessage = &waE2E.ImageMessage{
@@ -107,14 +107,14 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 				// Generate waveform
 				waveform, err = media.Waveform(req.Media.Content)
 				if err != nil {
-					s.log.Errorf("Failed to generate waveform: %v", err)
+					cli.Log.Errorf("Failed to generate waveform: %v", err)
 				}
 			}
 			if duration == 0 {
 				// Get duration
 				duration, err = media.Duration(req.Media.Content)
 				if err != nil {
-					s.log.Errorf("Failed to get duration of audio: %v", err)
+					cli.Log.Errorf("Failed to get duration of audio: %v", err)
 				}
 			}
 			durationSeconds := uint32(duration)
@@ -156,7 +156,7 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 			)
 
 			if err != nil {
-				s.log.Infof("Failed to generate video thumbnail: %v", err)
+				cli.Log.Infof("Failed to generate video thumbnail: %v", err)
 			}
 
 			message.VideoMessage = &waE2E.VideoMessage{
@@ -183,7 +183,7 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 			// Generate Thumbnail if possible
 			thumbnail, err := media.ImageThumbnail(req.Media.Content)
 			if err != nil {
-				s.log.Infof("Failed to generate thumbnail: %v", err)
+				cli.Log.Infof("Failed to generate thumbnail: %v", err)
 			}
 
 			// Attach
@@ -225,7 +225,7 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 	}
 	data, err := toJson(res)
 	if err != nil {
-		s.log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+		cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
 	}
 	msg := __.MessageResponse{
 		Id:        res.Info.ID,
@@ -250,7 +250,7 @@ func (s *Server) SendReaction(ctx context.Context, req *__.MessageReaction) (*__
 	}
 	data, err := toJson(res)
 	if err != nil {
-		s.log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+		cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
 	}
 	msg := __.MessageResponse{
 		Id:        res.Info.ID,
@@ -323,7 +323,7 @@ func (s *Server) RevokeMessage(ctx context.Context, req *__.RevokeMessageRequest
 
 	data, err := toJson(res)
 	if err != nil {
-		s.log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+		cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
 	}
 	msg := __.MessageResponse{
 		Id:        res.Info.ID,
@@ -358,7 +358,7 @@ func (s *Server) EditMessage(ctx context.Context, req *__.EditMessageRequest) (*
 
 	data, err := toJson(res)
 	if err != nil {
-		s.log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+		cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
 	}
 	msg := __.MessageResponse{
 		Id:        res.Info.ID,

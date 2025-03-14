@@ -18,7 +18,7 @@ func (s *Server) DownloadMedia(ctx context.Context, req *__.DownloadMediaRequest
 	}
 	resp, err := cli.DownloadAny(msg)
 	if err != nil {
-		s.log.Errorf("Failed to download media: %v", err)
+		cli.Log.Errorf("Failed to download media: %v", err)
 		return nil, nil
 	}
 	return &__.DownloadMediaResponse{Content: resp}, nil
