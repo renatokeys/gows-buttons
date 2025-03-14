@@ -73,12 +73,10 @@ func ExtractEphemeralSettingsFromMsg(event *events.Message) *storage.StoredChatE
 
 	setting := storage.NotEphemeral(event.Info.Chat)
 	setting.Setting = &storage.EphemeralSetting{
-		Initiator:     contextInfo.DisappearingMode.Initiator,
-		Trigger:       contextInfo.DisappearingMode.Trigger,
-		InitiatedByMe: contextInfo.DisappearingMode.InitiatedByMe,
-		Timestamp:     contextInfo.EphemeralSettingTimestamp,
-		Expiration:    *contextInfo.Expiration,
+		Timestamp:  contextInfo.EphemeralSettingTimestamp,
+		Expiration: *contextInfo.Expiration,
 	}
+	populateFromDisappearingMode(setting.Setting, contextInfo.DisappearingMode)
 	setting.IsEphemeral = true
 	return setting
 }
@@ -95,12 +93,10 @@ func ExtractEphemeralSettingsFromProtocolMessage(info types.MessageInfo, protoco
 			setting.IsEphemeral = true
 			timestamp := info.Timestamp.Unix()
 			setting.Setting = &storage.EphemeralSetting{
-				Initiator:     protocol.DisappearingMode.Initiator,
-				Trigger:       protocol.DisappearingMode.Trigger,
-				InitiatedByMe: protocol.DisappearingMode.InitiatedByMe,
-				Timestamp:     &timestamp,
-				Expiration:    *protocol.EphemeralExpiration,
+				Timestamp:  &timestamp,
+				Expiration: *protocol.EphemeralExpiration,
 			}
+			populateFromDisappearingMode(setting.Setting, protocol.DisappearingMode)
 		}
 		return setting
 	default:
@@ -115,11 +111,9 @@ func ExtractEphemeralSettingsFromConversation(conv *waHistorySync.Conversation, 
 	setting := storage.NotEphemeral(jid)
 	setting.IsEphemeral = true
 	setting.Setting = &storage.EphemeralSetting{
-		Initiator:     conv.DisappearingMode.Initiator,
-		Trigger:       conv.DisappearingMode.Trigger,
-		InitiatedByMe: conv.DisappearingMode.InitiatedByMe,
-		Timestamp:     conv.EphemeralSettingTimestamp,
+		Timestamp: conv.EphemeralSettingTimestamp,
 	}
+	populateFromDisappearingMode(setting.Setting, conv.DisappearingMode)
 	return setting
 }
 
@@ -139,4 +133,19 @@ func ExtractEphemeralSettingsFromGroup(group *types.GroupInfo) *storage.StoredCh
 		},
 	}
 	return setting
+}
+
+func populateFromDisappearingMode(setting *storage.EphemeralSetting, mode *waE2E.DisappearingMode) {
+	if mode == nil {
+		return
+	}
+	if mode.Initiator != nil {
+		setting.Initiator = mode.Initiator
+	}
+	if mode.Trigger != nil {
+		setting.Trigger = mode.Trigger
+	}
+	if mode.InitiatedByMe != nil {
+		setting.InitiatedByMe = mode.InitiatedByMe
+	}
 }
