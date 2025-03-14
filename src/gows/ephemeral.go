@@ -113,21 +113,17 @@ func ExtractEphemeralSettingsFromMsg(event *events.Message) *storage.StoredChatE
 	return setting
 }
 
-// ExtractEphemeralSettingsChanged extracts ephemeral settings from a message event.
-func ExtractEphemeralSettingsChanged(event *events.Message) *storage.StoredChatEphemeralSetting {
-	if event.Message == nil || event.Message.ProtocolMessage == nil {
-		return nil
-	}
-	protocol := event.Message.ProtocolMessage
+// ExtractEphemeralSettingsFromProtocolMessage extracts ephemeral settings from a message event.
+func ExtractEphemeralSettingsFromProtocolMessage(info types.MessageInfo, protocol *waE2E.ProtocolMessage) *storage.StoredChatEphemeralSetting {
 	type_ := *protocol.Type
 	switch type_ {
 	case waE2E.ProtocolMessage_EPHEMERAL_SETTING, waE2E.ProtocolMessage_EPHEMERAL_SYNC_RESPONSE:
 		var setting *storage.StoredChatEphemeralSetting
-		setting = storage.NotEphemeral(event.Info.Chat)
+		setting = storage.NotEphemeral(info.Chat)
 		isEphemeral := protocol.EphemeralExpiration != nil && *protocol.EphemeralExpiration > 0
 		if isEphemeral && protocol.DisappearingMode != nil {
 			setting.IsEphemeral = true
-			timestamp := event.Info.Timestamp.Unix()
+			timestamp := info.Timestamp.Unix()
 			setting.Setting = &storage.EphemeralSetting{
 				Initiator:     protocol.DisappearingMode.Initiator,
 				Trigger:       protocol.DisappearingMode.Trigger,

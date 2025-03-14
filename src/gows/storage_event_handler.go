@@ -141,18 +141,21 @@ func (st *StorageEventHandler) handleMessageEvent(event *events.Message) {
 	}
 
 	// Chat ephemeral settings - changed
-	setting := ExtractEphemeralSettingsChanged(event)
-	if setting != nil {
-		err := st.storage.ChatEphemeralSetting.UpdateChatEphemeralSetting(setting)
-		if err != nil {
-			st.log.Errorf("Error updating chat ephemeral setting %v: %v", setting.ID, err)
+	isProtocolMessage := event.Message != nil && event.Message.ProtocolMessage != nil
+	if isProtocolMessage {
+		setting := ExtractEphemeralSettingsFromProtocolMessage(event.Info, event.Message.ProtocolMessage)
+		if setting != nil {
+			err := st.storage.ChatEphemeralSetting.UpdateChatEphemeralSetting(setting)
+			if err != nil {
+				st.log.Errorf("Error updating chat ephemeral setting %v: %v", setting.ID, err)
+			}
+			st.log.Debugf("Changed chat ephemeral setting %v (enabled: %v)", setting.ID, setting.IsEphemeral)
+			return
 		}
-		st.log.Debugf("Changed chat ephemeral setting %v (enabled: %v)", setting.ID, setting.IsEphemeral)
-		return
 	}
 
 	// Chat ephemeral settings - from message
-	setting = ExtractEphemeralSettingsFromMsg(event)
+	setting := ExtractEphemeralSettingsFromMsg(event)
 	if setting != nil {
 		err := st.storage.ChatEphemeralSetting.UpdateChatEphemeralSetting(setting)
 		if err != nil {
