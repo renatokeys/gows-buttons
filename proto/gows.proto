@@ -107,6 +107,7 @@ service MessageService {
   rpc MarkRead(MarkReadRequest) returns (Empty);
   rpc EditMessage(EditMessageRequest) returns (MessageResponse);
   rpc RevokeMessage(RevokeMessageRequest) returns (MessageResponse);
+  rpc SendButtonReply (ButtonReplyRequest) returns (MessageResponse);
 
   //
   // Newsletters
@@ -299,6 +300,14 @@ message ProfilePictureRequest {
 }
 message ProfilePictureResponse {
   string url = 2;
+}
+
+message ButtonReplyRequest {
+  Session session = 1;
+  string jid = 2;
+  string selectedDisplayText = 3;
+  string selectedButtonID = 4;
+  string replyTo = 5;
 }
 
 enum Presence {

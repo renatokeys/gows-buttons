@@ -6,6 +6,7 @@ import (
 	"github.com/devlikeapro/gows/media"
 	"github.com/devlikeapro/gows/proto"
 	"github.com/golang/protobuf/proto"
+	"go.mau.fi/util/random"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
@@ -356,6 +357,52 @@ func (s *Server) EditMessage(ctx context.Context, req *__.EditMessageRequest) (*
 		return nil, err
 	}
 
+	data, err := toJson(res)
+	if err != nil {
+		cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+	}
+	msg := __.MessageResponse{
+		Id:        res.Info.ID,
+		Timestamp: res.Info.Timestamp.Unix(),
+		Message:   data,
+	}
+	return &msg, nil
+}
+
+func (s *Server) SendButtonReply(ctx context.Context, req *__.ButtonReplyRequest) (*__.MessageResponse, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+	jid, err := types.ParseJID(req.GetJid())
+	if err != nil {
+		return nil, err
+	}
+
+	contextInfo, err := cli.PopulateContextInfoWithReply(nil, req.ReplyTo)
+	if err != nil {
+		cli.Log.Warnf("Failed to get message for reply: %v", err)
+	}
+
+	message := &waE2E.Message{
+		ButtonsResponseMessage: &waE2E.ButtonsResponseMessage{
+			Type: waE2E.ButtonsResponseMessage_DISPLAY_TEXT.Enum(),
+			Response: &waE2E.ButtonsResponseMessage_SelectedDisplayText{
+				SelectedDisplayText: req.SelectedDisplayText,
+			},
+			SelectedButtonID: proto.String(req.SelectedButtonID),
+			ContextInfo:      contextInfo,
+		},
+	}
+
+	message.MessageContextInfo = &waE2E.MessageContextInfo{
+		MessageSecret: random.Bytes(32),
+	}
+
+	res, err := cli.SendMessage(ctx, jid, message)
+	if err != nil {
+		return nil, err
+	}
 	data, err := toJson(res)
 	if err != nil {
 		cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
