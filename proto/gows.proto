@@ -278,6 +278,10 @@ message MessageRequest {
   bool linkPreviewHighQuality = 8;
 
   string replyTo = 9;
+  // Pre-generated message ID
+  string id = 10;
+  // Status Message
+  repeated string participants = 11;
 }
 
 message MessageReaction {
@@ -370,6 +374,7 @@ message RevokeMessageRequest {
   string jid = 2;
   string sender = 3;
   string messageId = 4;
+  repeated string participants = 5;
 }
 
 message EditMessageRequest {

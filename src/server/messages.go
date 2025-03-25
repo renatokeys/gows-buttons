@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/devlikeapro/gows/media"
 	"github.com/devlikeapro/gows/proto"
 	"github.com/golang/protobuf/proto"
@@ -12,6 +13,18 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"time"
 )
+
+func parseParticipantJIDs(participants []string) ([]types.JID, error) {
+	jids := make([]types.JID, 0, len(participants))
+	for _, p := range participants {
+		jid, err := types.ParseJID(p)
+		if err != nil {
+			return nil, fmt.Errorf("invalid participant jid (%s): %w", p, err)
+		}
+		jids = append(jids, jid)
+	}
+	return jids, nil
+}
 
 func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.MessageResponse, error) {
 	cli, err := s.Sm.Get(req.GetSession().GetId())
@@ -39,6 +52,19 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 
 	var message *waE2E.Message
 	extra := whatsmeow.SendRequestExtra{}
+
+	if len(req.Participants) > 0 {
+		participants, err := parseParticipantJIDs(req.Participants)
+		if err != nil {
+			return nil, err
+		}
+		extra.Participants = participants
+	}
+
+	if req.Id != "" {
+		extra.ID = req.Id
+	}
+
 	if req.Media == nil {
 		// Text Message
 		message = cli.BuildTextMessage(req.Text)
@@ -316,8 +342,17 @@ func (s *Server) RevokeMessage(ctx context.Context, req *__.RevokeMessageRequest
 		participantJid = *cli.Store.ID
 	}
 
+	extra := whatsmeow.SendRequestExtra{}
+	if len(req.Participants) > 0 {
+		participants, err := parseParticipantJIDs(req.Participants)
+		if err != nil {
+			return nil, err
+		}
+		extra.Participants = participants
+	}
+
 	message := cli.BuildRevoke(jid, participantJid, req.MessageId)
-	res, err := cli.SendMessage(ctx, jid, message)
+	res, err := cli.SendMessage(ctx, jid, message, extra)
 	if err != nil {
 		return nil, err
 	}
