@@ -21,6 +21,8 @@ require (
 	google.golang.org/protobuf v1.36.5
 )
 
+require go.mau.fi/util v0.8.6
+
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.5 // indirect
@@ -40,14 +42,13 @@ require (
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	go.mau.fi/libsignal v0.1.2 // indirect
-	go.mau.fi/util v0.8.5 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250304025512-82028519c489 // branch: fork-main
+replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250325051635-93cd62a3d961 // branch: fork-main-v1021018791
