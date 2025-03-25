@@ -102,6 +102,7 @@ service MessageService {
   //
   // Message
   //
+  rpc GenerateNewMessageID (Session) returns (NewMessageIDResponse);
   rpc SendMessage (MessageRequest) returns (MessageResponse);
   rpc SendReaction (MessageReaction) returns (MessageResponse);
   rpc MarkRead(MarkReadRequest) returns (Empty);
@@ -296,6 +297,10 @@ message MessageResponse {
   string id = 1;
   int64 timestamp = 2;
   Json message = 3;
+}
+
+message NewMessageIDResponse {
+  string id = 1;
 }
 
 message ProfilePictureRequest {

@@ -14,6 +14,15 @@ import (
 	"time"
 )
 
+func (s *Server) GenerateNewMessageID(ctx context.Context, req *__.Session) (*__.NewMessageIDResponse, error) {
+	cli, err := s.Sm.Get(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	id := cli.GenerateMessageID()
+	return &__.NewMessageIDResponse{Id: id}, nil
+}
+
 func parseParticipantJIDs(participants []string) ([]types.JID, error) {
 	jids := make([]types.JID, 0, len(participants))
 	for _, p := range participants {
