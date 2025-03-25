@@ -280,7 +280,7 @@ func (s *Server) SendReaction(ctx context.Context, req *__.MessageReaction) (*__
 	sender, err := types.ParseJID(req.Sender)
 
 	message := cli.BuildReaction(jid, sender, req.MessageId, req.Reaction)
-	res, err := cli.SendMessage(ctx, jid, message)
+	res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +396,7 @@ func (s *Server) EditMessage(ctx context.Context, req *__.EditMessageRequest) (*
 	}
 
 	editMessage := cli.BuildEdit(jid, req.MessageId, message)
-	res, err := cli.SendMessage(ctx, jid, editMessage)
+	res, err := cli.SendMessage(ctx, jid, editMessage, whatsmeow.SendRequestExtra{})
 	if err != nil {
 		return nil, err
 	}
@@ -443,7 +443,7 @@ func (s *Server) SendButtonReply(ctx context.Context, req *__.ButtonReplyRequest
 		MessageSecret: random.Bytes(32),
 	}
 
-	res, err := cli.SendMessage(ctx, jid, message)
+	res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
 	if err != nil {
 		return nil, err
 	}

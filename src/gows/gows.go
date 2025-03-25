@@ -153,11 +153,23 @@ func (gows *GoWS) GetEventChannel() <-chan interface{} {
 	return gows.events
 }
 
-func (gows *GoWS) SendMessage(ctx context.Context, to types.JID, msg *waE2E.Message, extra ...whatsmeow.SendRequestExtra) (message *events.Message, err error) {
-	resp, err := gows.Client.SendMessage(ctx, to, msg, extra...)
-	if err != nil {
-		return nil, err
+func (gows *GoWS) SendMessage(ctx context.Context, to types.JID, msg *waE2E.Message, extra whatsmeow.SendRequestExtra) (message *events.Message, err error) {
+	var resp whatsmeow.SendResponse
+
+	if to.User == "status" && to.Server == types.BroadcastServer {
+		// Broadcast messages (Status)
+		result, err := gows.SendStatusMessage(ctx, to, msg, extra)
+		if err != nil {
+			return nil, err
+		}
+		resp = *result
+	} else {
+		resp, err = gows.Client.SendMessage(ctx, to, msg, extra)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	info := &types.MessageInfo{
 		MessageSource: types.MessageSource{
 			Chat:     to,
