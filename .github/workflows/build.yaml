@@ -45,6 +45,7 @@ jobs:
         with:
           name: binary-${{ matrix.platform }}
           path: release/${{ matrix.binary_name }}
+          retention-days: 2
 
   collect-proto:
     name: Collect Proto Files
@@ -58,6 +59,7 @@ jobs:
         with:
           name: proto
           path: proto/
+          retention-days: 2
 
   publish-release:
     name: Publish Release
