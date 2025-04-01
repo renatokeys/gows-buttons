@@ -298,7 +298,7 @@ func (s *Server) SendReaction(ctx context.Context, req *__.MessageReaction) (*__
 			}
 		}
 		if serverID == 0 {
-			return nil, fmt.Errorf("failed to get server id for message (%s)", req.MessageId)
+			return nil, fmt.Errorf("failed to get server id for newsletter message (%s)", req.MessageId)
 		}
 
 		messageID := cli.GenerateMessageID()
