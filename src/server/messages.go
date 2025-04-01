@@ -11,6 +11,7 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"strconv"
 	"time"
 )
 
@@ -277,23 +278,61 @@ func (s *Server) SendReaction(ctx context.Context, req *__.MessageReaction) (*__
 		return nil, err
 	}
 	jid, err := types.ParseJID(req.Jid)
-	sender, err := types.ParseJID(req.Sender)
-
-	message := cli.BuildReaction(jid, sender, req.MessageId, req.Reaction)
-	res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
 	if err != nil {
 		return nil, err
 	}
-	data, err := toJson(res)
-	if err != nil {
-		cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+	if jid.Server == types.NewsletterServer {
+		serverID, err := strconv.Atoi(req.MessageId)
+		if err != nil {
+			cli.Log.Debugf("failed to convert message id (%s) when sending reaction to newsletter: %v", req.MessageId, err)
+		}
+
+		if serverID == 0 || err != nil {
+			// It's not int - try to get it from storage
+			storedMsg, err := cli.Storage.Messages.GetMessage(req.MessageId)
+			if err != nil {
+				cli.Log.Debugf("failed to get message (%s) when sending reaction to newsletter: %v", req.MessageId, err)
+			}
+			if storedMsg != nil {
+				serverID = storedMsg.Message.Info.ServerID
+			}
+		}
+		if serverID == 0 {
+			return nil, fmt.Errorf("failed to get server id for message (%s)", req.MessageId)
+		}
+
+		messageID := cli.GenerateMessageID()
+		err = cli.NewsletterSendReaction(jid, serverID, req.Reaction, messageID)
+		if err != nil {
+			return nil, err
+		}
+		msg := __.MessageResponse{
+			Id:        messageID,
+			Timestamp: time.Now().Unix(),
+			Message:   nil,
+		}
+		return &msg, nil
+	} else {
+		sender, err := types.ParseJID(req.Sender)
+		if err != nil {
+			return nil, err
+		}
+		message := cli.BuildReaction(jid, sender, req.MessageId, req.Reaction)
+		res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
+		if err != nil {
+			return nil, err
+		}
+		data, err := toJson(res)
+		if err != nil {
+			cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+		}
+		msg := __.MessageResponse{
+			Id:        res.Info.ID,
+			Timestamp: res.Info.Timestamp.Unix(),
+			Message:   data,
+		}
+		return &msg, nil
 	}
-	msg := __.MessageResponse{
-		Id:        res.Info.ID,
-		Timestamp: res.Info.Timestamp.Unix(),
-		Message:   data,
-	}
-	return &msg, nil
 }
 
 func (s *Server) MarkRead(ctx context.Context, req *__.MarkReadRequest) (*__.Empty, error) {
