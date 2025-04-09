@@ -53,3 +53,18 @@ func Resize(image []byte, size Size) ([]byte, error) {
 	}
 	return resized, nil
 }
+
+func CurrentSize(buffer []byte) (Size, error) {
+	image := bimg.NewImage(buffer)
+
+	// Get the size
+	size, err := image.Size()
+	if err != nil {
+		return Size{}, err
+	}
+	s := Size{
+		Width:  uint32(size.Width),
+		Height: uint32(size.Height),
+	}
+	return s, nil
+}

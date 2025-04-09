@@ -26,29 +26,43 @@ func (gows *GoWS) UploadMedia(
 
 // AddLinkPreviewSafe adds a link preview to the message if a link is found in the text.
 // logs an error if the preview cannot be fetched.
-func (gows *GoWS) AddLinkPreviewSafe(jid types.JID, message *waE2E.ExtendedTextMessage, highQuality bool) {
+func (gows *GoWS) AddLinkPreviewSafe(jid types.JID, message *waE2E.ExtendedTextMessage, highQuality bool, preview *media.LinkPreview) {
 	linkPreviewCtx, cancel := context.WithTimeout(gows.Context, FetchPreviewTimeout)
 	defer cancel()
-	err := gows.AddLinkPreviewIfFoundWithContext(linkPreviewCtx, jid, message, highQuality)
+	err := gows.AddLinkPreviewWithContext(linkPreviewCtx, jid, message, highQuality, preview)
 	if err != nil {
 		gows.Log.Errorf("Failed to add link preview: %v", err)
 	}
 }
 
-// AddLinkPreviewIfFoundWithContext adds a link preview to the message if a link is found in the text.
+// AddLinkPreviewWithContext adds a link preview to the message if a link is found in the text.
 // returns an error if the preview cannot be fetched.
-func (gows *GoWS) AddLinkPreviewIfFoundWithContext(ctx context.Context, jid types.JID, message *waE2E.ExtendedTextMessage, highQuality bool) error {
-	text := message.Text
-	matched := media.ExtractUrlFromText(*text)
-	if matched == "" {
-		return nil
-	}
-	// "matched" must be exact as it was in the text
-	// but scraped URL should be normalized (because it'd also find www.whatsapp.com)
-	url := media.MakeSureURL(matched)
-	preview, err := media.GoscraperFetchPreview(ctx, url)
-	if err != nil {
-		return fmt.Errorf("failed to fetch preview info for (%s): %w", url, err)
+func (gows *GoWS) AddLinkPreviewWithContext(
+	ctx context.Context,
+	jid types.JID,
+	message *waE2E.ExtendedTextMessage,
+	highQuality bool,
+	preview *media.LinkPreview,
+) (err error) {
+	var matched string
+
+	if preview == nil {
+		// If the preview is nil, we need to extract the URL from the text
+		text := message.Text
+		matched = media.ExtractUrlFromText(*text)
+		if matched == "" {
+			return nil
+		}
+		// "matched" must be exact as it was in the text
+		// but scraped URL should be normalized (because it'd also find www.whatsapp.com)
+		url := media.MakeSureURL(matched)
+		preview, err = media.GoscraperFetchPreview(ctx, url)
+		if err != nil || preview == nil {
+			return fmt.Errorf("failed to fetch preview info for (%s): %w", url, err)
+		}
+	} else {
+		// If the preview provided, we need to extract the URL from it
+		matched = preview.Url
 	}
 
 	type_ := waE2E.ExtendedTextMessage_NONE

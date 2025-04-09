@@ -80,7 +80,7 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		message = cli.BuildTextMessage(req.Text)
 		// Link Preview
 		if req.LinkPreview {
-			cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
+			cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality, nil)
 		}
 
 		message.ExtendedTextMessage.ContextInfo = contextInfo
@@ -431,7 +431,7 @@ func (s *Server) EditMessage(ctx context.Context, req *__.EditMessageRequest) (*
 	if req.LinkPreview && media.ExtractUrlFromText(req.Text) != "" {
 		// Switch to text message if it has URL and link preview is requested
 		message = cli.BuildTextMessage(req.Text)
-		cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality)
+		cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality, nil)
 	}
 
 	editMessage := cli.BuildEdit(jid, req.MessageId, message)
