@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/devlikeapro/gows/media"
+	"github.com/gogo/protobuf/proto"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
@@ -71,82 +72,53 @@ func (gows *GoWS) AddLinkPreviewWithContext(
 	message.Title = &preview.Title
 	message.Description = &preview.Description
 
-	var resp *whatsmeow.UploadResponse
-	var thumbnail *[]byte
-	if preview.ImageUrl != "" && highQuality {
-		// Generate high quality thumbnail if asked
-		resp, thumbnail, err = gows.fetchImageThumbnailHQ(ctx, jid, preview.ImageUrl)
-		if err != nil {
-			gows.Log.Warnf("failed get image high quality preview (%s): %v", preview.ImageUrl, err)
-		}
-
-	} else if preview.ImageUrl != "" && !highQuality {
-		// Generate normal quality thumbnail
-		thumbnail, err = gows.fetchImageThumbnail(ctx, preview.ImageUrl, media.PreviewLinkBuiltInSize)
-		if err != nil {
-			gows.Log.Warnf("failed get image preview (%s): %v", preview.ImageUrl, err)
-		}
+	imageUrl := preview.ImageUrl
+	if imageUrl == "" {
+		// If the image URL is empty, we need to use the icon URL
+		imageUrl = preview.IconUrl
+		// HQ thumbnail is not supported for icon URL
+		highQuality = false
+		gows.Log.Infof("Using icon URL (%s) for link preview", imageUrl)
 	}
 
-	hasThumbnail := thumbnail != nil && len(*thumbnail) > 0
-	if !hasThumbnail && preview.IconUrl != "" {
-		// Generate thumbnail from icon if the main image is not available
-		thumbnail, err = gows.fetchImageThumbnail(ctx, preview.IconUrl, media.ThumbnailSize)
+	if imageUrl == "" {
+		// valid case if no image URL is provided or found
+		return nil
+	}
+
+	image, err := media.FetchBodyByUrl(ctx, imageUrl)
+	if err != nil {
+		return fmt.Errorf("failed to download image (%s) for link preview: %w", preview.ImageUrl, err)
+	}
+
+	if !highQuality {
+		thumbnail, err := media.Resize(image, media.PreviewLinkBuiltInSize)
 		if err != nil {
-			gows.Log.Warnf("failed get image preview for icon (%s): %v", preview.IconUrl, err)
+			return fmt.Errorf("failed to generate thumbnail: %w", err)
 		}
-	}
-
-	if thumbnail != nil {
-		message.JPEGThumbnail = *thumbnail
-	}
-
-	if resp != nil {
+		message.JPEGThumbnail = thumbnail
+	} else {
+		thumbnail, err := media.ImageAutoThumbnail(image)
+		if err != nil {
+			return fmt.Errorf("failed to generate thumbnail: %w", err)
+		}
+		resp, err := gows.UploadMedia(gows.Context, jid, image, whatsmeow.MediaLinkThumbnail)
+		if err != nil {
+			return fmt.Errorf("failed to upload image (%s): %w", preview.ImageUrl, err)
+		}
+		size, err := media.CurrentSize(image)
+		if err != nil {
+			size = media.PreviewLinkSize
+		}
+		message.JPEGThumbnail = thumbnail
 		message.ThumbnailDirectPath = &resp.DirectPath
 		message.ThumbnailSHA256 = resp.FileSHA256
 		message.ThumbnailEncSHA256 = resp.FileEncSHA256
-		message.ThumbnailHeight = &media.PreviewLinkSize.Height
-		message.ThumbnailWidth = &media.PreviewLinkSize.Width
+		message.ThumbnailHeight = proto.Uint32(size.Height)
+		message.ThumbnailWidth = proto.Uint32(size.Width)
 		message.MediaKey = resp.MediaKey
 		now := time.Now().Unix()
 		message.MediaKeyTimestamp = &now
 	}
 	return nil
-}
-
-// fetchImageThumbnailHQ fetches the image from the URL, resizes it to the HQ size,
-// uploads it to the server, and returns the thumbnail.
-// aka High Quality thumbnail.
-func (gows *GoWS) fetchImageThumbnailHQ(ctx context.Context, jid types.JID, imageUrl string) (*whatsmeow.UploadResponse, *[]byte, error) {
-	image, err := media.FetchBodyByUrl(ctx, imageUrl)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to download image: %w", err)
-	}
-	imageResized, err := media.Resize(image, media.PreviewLinkSize)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to resize image: %w", err)
-	}
-	resp, err := gows.UploadMedia(gows.Context, jid, imageResized, whatsmeow.MediaLinkThumbnail)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to upload image: %w", err)
-	}
-	thumbnail, err := media.ImageThumbnail(imageResized)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to generate thumbnail: %w", err)
-	}
-	return &resp, &thumbnail, nil
-}
-
-// fetchImageThumbnail fetches the image from the URL, resizes it to the right size,
-// and returns the thumbnail.
-func (gows *GoWS) fetchImageThumbnail(ctx context.Context, imageUrl string, size media.Size) (*[]byte, error) {
-	image, err := media.FetchBodyByUrl(ctx, imageUrl)
-	if err != nil {
-		return nil, fmt.Errorf("failed to download image: %w", err)
-	}
-	thumbnail, err := media.Resize(image, size)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate thumbnail: %w", err)
-	}
-	return &thumbnail, nil
 }

@@ -21,7 +21,11 @@ require (
 	google.golang.org/protobuf v1.36.5
 )
 
-require go.mau.fi/util v0.8.6
+require (
+	github.com/gogo/protobuf v1.3.2
+	github.com/samber/lo v1.49.1
+	go.mau.fi/util v0.8.6
+)
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -40,7 +44,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
-	github.com/samber/lo v1.49.1 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	go.mau.fi/libsignal v0.1.2 // indirect
 	go.uber.org/atomic v1.7.0 // indirect

@@ -2,6 +2,7 @@ package media
 
 import (
 	"github.com/h2non/bimg"
+	"math"
 )
 
 type Size struct {
@@ -38,6 +39,15 @@ func ProfilePicture(image []byte) ([]byte, error) {
 	return Resize(image, ProfilePictureSize)
 }
 
+func ImageAutoThumbnail(image []byte) ([]byte, error) {
+	size, err := CurrentSize(image)
+	if err != nil {
+		return nil, err
+	}
+	size = SizeForThumbnail(size)
+	return Resize(image, size)
+}
+
 // Resize generates a thumbnail image from an image.
 func Resize(image []byte, size Size) ([]byte, error) {
 	img := bimg.NewImage(image)
@@ -67,4 +77,29 @@ func CurrentSize(buffer []byte) (Size, error) {
 		Height: uint32(size.Height),
 	}
 	return s, nil
+}
+
+func SizeWithEdgeLimit(size Size, maxEdge int) Size {
+	width := float64(size.Width)
+	height := float64(size.Height)
+
+	if width <= float64(maxEdge) && height <= float64(maxEdge) {
+		// Already within limits
+		return size
+	}
+
+	scale := float64(maxEdge) / math.Max(width, height)
+
+	return Size{
+		Width:  uint32(width * scale),
+		Height: uint32(height * scale),
+	}
+}
+
+const ImgThumbMaxEdge = 100
+
+// SizeForThumbnail returns the size for a thumbnail image.
+// It scales the image to fit within the maximum edge size while maintaining
+func SizeForThumbnail(size Size) Size {
+	return SizeWithEdgeLimit(size, ImgThumbMaxEdge)
 }
