@@ -35,6 +35,7 @@ type LinkPreview struct {
 	Description string
 	ImageUrl    string
 	IconUrl     string
+	Image       []byte
 }
 
 var ScrapeHeaders = map[string]string{

@@ -32,7 +32,7 @@ func (gows *GoWS) AddLinkPreviewSafe(jid types.JID, message *waE2E.ExtendedTextM
 	defer cancel()
 	err := gows.AddLinkPreviewWithContext(linkPreviewCtx, jid, message, highQuality, preview)
 	if err != nil {
-		gows.Log.Errorf("Failed to add link preview: %v", err)
+		gows.Log.Warnf("Failed to add link preview: %v", err)
 	}
 }
 
@@ -72,23 +72,27 @@ func (gows *GoWS) AddLinkPreviewWithContext(
 	message.Title = &preview.Title
 	message.Description = &preview.Description
 
-	imageUrl := preview.ImageUrl
-	if imageUrl == "" {
-		// If the image URL is empty, we need to use the icon URL
-		imageUrl = preview.IconUrl
-		// HQ thumbnail is not supported for icon URL
+	var image []byte
+	switch {
+	case preview.Image != nil && len(preview.Image) > 0:
+		gows.Log.Debugf("Using image data provided from link preview")
+		image = preview.Image
+	case preview.ImageUrl != "":
+		gows.Log.Debugf("Using image URL (%s) from link preview", preview.ImageUrl)
+		image, err = media.FetchBodyByUrl(ctx, preview.ImageUrl)
+		if err != nil {
+			return fmt.Errorf("failed to download image (%s) for link preview: %w", preview.ImageUrl, err)
+		}
+	case preview.IconUrl != "":
+		gows.Log.Debugf("Using icon URL (%s) from link preview", preview.IconUrl)
+		image, err = media.FetchBodyByUrl(ctx, preview.IconUrl)
+		if err != nil {
+			return fmt.Errorf("failed to download icon (%s) for link preview: %w", preview.IconUrl, err)
+		}
 		highQuality = false
-		gows.Log.Infof("Using icon URL (%s) for link preview", imageUrl)
-	}
-
-	if imageUrl == "" {
-		// valid case if no image URL is provided or found
+	default:
+		gows.Log.Debugf("No image or icon URL found in link preview")
 		return nil
-	}
-
-	image, err := media.FetchBodyByUrl(ctx, imageUrl)
-	if err != nil {
-		return fmt.Errorf("failed to download image (%s) for link preview: %w", preview.ImageUrl, err)
 	}
 
 	if !highQuality {

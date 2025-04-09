@@ -266,6 +266,12 @@ message Media {
   string filename = 5;
 }
 
+message LinkPreview {
+  string url = 1;
+  string title = 2;
+  string description = 3;
+  bytes image = 4;
+}
 
 message MessageRequest {
   Session session = 1;
@@ -283,6 +289,9 @@ message MessageRequest {
   string id = 10;
   // Status Message
   repeated string participants = 11;
+
+  // Custom link preview
+  LinkPreview preview = 12;
 }
 
 message MessageReaction {

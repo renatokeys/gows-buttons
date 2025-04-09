@@ -80,7 +80,17 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		message = cli.BuildTextMessage(req.Text)
 		// Link Preview
 		if req.LinkPreview {
-			cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality, nil)
+			var preview *media.LinkPreview
+			if req.Preview != nil {
+				// Custom preview provided
+				preview = &media.LinkPreview{
+					Url:         req.Preview.Url,
+					Title:       req.Preview.Title,
+					Description: req.Preview.Description,
+					Image:       req.Preview.Image,
+				}
+			}
+			cli.AddLinkPreviewSafe(jid, message.ExtendedTextMessage, req.LinkPreviewHighQuality, preview)
 		}
 
 		message.ExtendedTextMessage.ContextInfo = contextInfo
