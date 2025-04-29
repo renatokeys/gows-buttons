@@ -1,10 +1,11 @@
 package storage
 
 import (
+	"time"
+
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
-	"time"
 )
 
 type Status int
@@ -73,4 +74,12 @@ type Sort struct {
 type Pagination struct {
 	Offset uint64
 	Limit  uint64
+}
+
+type MessageFilter struct {
+	Jid          *types.JID
+	TimestampGte *time.Time
+	TimestampLte *time.Time
+	FromMe       *bool
+	Status       *Status
 }

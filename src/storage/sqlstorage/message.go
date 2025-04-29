@@ -2,6 +2,7 @@ package sqlstorage
 
 import (
 	"fmt"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/avast/retry-go"
 	"github.com/devlikeapro/gows/storage"
@@ -42,6 +43,16 @@ func (s SqlMessageStore) GetAllMessages(filters storage.MessageFilter, paginatio
 	}
 	if filters.FromMe != nil {
 		conditions = append(conditions, sq.Eq{"from_me": filters.FromMe})
+	}
+	if filters.Status != nil {
+		switch s.db.DriverName() {
+		case "sqlite3":
+			conditions = append(conditions, sq.Expr("json_extract(data, '$.Status') = ?", *filters.Status))
+		case "postgres":
+			conditions = append(conditions, sq.Expr("(data->>'Status')::int = ?", *filters.Status))
+		default:
+			return nil, fmt.Errorf("unsupported database driver: %s", s.db.DriverName())
+		}
 	}
 
 	conditions = append(conditions, sq.Eq{"is_real": true})

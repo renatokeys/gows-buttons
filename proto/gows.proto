@@ -537,6 +537,7 @@ message MessageFilters {
   OptionalUInt64 timestampGte = 2;
   OptionalUInt64 timestampLte = 3;
   OptionalBool fromMe = 4;
+  OptionalUInt32 status = 5;
 }
 
 message GetMessagesRequest {

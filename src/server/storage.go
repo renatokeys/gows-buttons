@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+
 	__ "github.com/devlikeapro/gows/proto"
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/types"
@@ -63,6 +64,10 @@ func parseMessageFilters(reqFilters *__.MessageFilters) (*storage.MessageFilter,
 	}
 	if reqFilters.FromMe != nil {
 		filters.FromMe = &reqFilters.FromMe.Value
+	}
+	if reqFilters.Status != nil {
+		status := storage.Status(reqFilters.Status.Value)
+		filters.Status = &status
 	}
 	return &filters, nil
 }

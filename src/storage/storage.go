@@ -3,7 +3,6 @@ package storage
 import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
-	"time"
 )
 
 type Storage struct {
@@ -12,13 +11,6 @@ type Storage struct {
 	Chats                ChatStorage
 	Groups               GroupStorage
 	ChatEphemeralSetting ChatEphemeralSettingStorage
-}
-
-type MessageFilter struct {
-	Jid          *types.JID
-	TimestampGte *time.Time
-	TimestampLte *time.Time
-	FromMe       *bool
 }
 
 type MessageStorage interface {
