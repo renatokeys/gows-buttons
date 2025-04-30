@@ -2,6 +2,8 @@ package gows
 
 import (
 	"context"
+	"time"
+
 	"github.com/devlikeapro/gows/storage"
 	"github.com/devlikeapro/gows/storage/sqlstorage"
 	_ "github.com/jackc/pgx/v5"     // Import the Postgres driver
@@ -184,4 +186,25 @@ func (gows *GoWS) SendMessage(ctx context.Context, to types.JID, msg *waE2E.Mess
 	evt := &events.Message{Info: *info, Message: msg, RawMessage: msg}
 	go gows.handleEvent(evt)
 	return evt, nil
+}
+
+// MarkRead marks messages as read and emits a receipt event
+func (gows *GoWS) MarkRead(ids []types.MessageID, chat types.JID, sender types.JID, receiptType types.ReceiptType) error {
+	timestamp := time.Now()
+	err := gows.Client.MarkRead(ids, timestamp, chat, sender, receiptType)
+	if err != nil {
+		return err
+	}
+
+	receipt := &events.Receipt{
+		MessageSource: types.MessageSource{
+			Chat:   chat,
+			Sender: sender,
+		},
+		MessageIDs: ids,
+		Type:       receiptType,
+		Timestamp:  timestamp,
+	}
+	go gows.handleEvent(receipt)
+	return nil
 }

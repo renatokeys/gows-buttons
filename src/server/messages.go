@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/devlikeapro/gows/media"
-	"github.com/devlikeapro/gows/proto"
+	__ "github.com/devlikeapro/gows/proto"
 	"github.com/golang/protobuf/proto"
 	"go.mau.fi/util/random"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
-	"strconv"
-	"time"
 )
 
 func (s *Server) GenerateNewMessageID(ctx context.Context, req *__.Session) (*__.NewMessageIDResponse, error) {
@@ -382,8 +383,7 @@ func (s *Server) MarkRead(ctx context.Context, req *__.MarkReadRequest) (*__.Emp
 		return nil, errors.New("no message ids provided")
 	}
 
-	now := time.Now()
-	err = cli.MarkRead(ids, now, jid, sender, receiptType)
+	err = cli.MarkRead(ids, jid, sender, receiptType)
 	if err != nil {
 		return nil, err
 	}
