@@ -366,6 +366,7 @@ message MarkReadRequest {
   string sender = 3;
   string messageId = 4;
   ReceiptType type = 5;
+  repeated string messageIds = 6;  
 }
 
 message CheckPhonesRequest {
