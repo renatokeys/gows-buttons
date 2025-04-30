@@ -1,6 +1,8 @@
 package gows
 
 import (
+	"runtime/debug"
+
 	"github.com/avast/retry-go"
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/proto/waE2E"
@@ -8,7 +10,6 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
-	"runtime/debug"
 )
 
 type StorageEventHandler struct {
@@ -267,11 +268,11 @@ func (st *StorageEventHandler) handleGroupInfo(info *events.GroupInfo) {
 }
 
 func (st *StorageEventHandler) handleDeleteChat(event *events.DeleteChat) {
-	err := st.storage.Messages.DeleteChatMessages(event.JID)
+	err := st.storage.Messages.DeleteChatMessages(event.JID, event.Timestamp)
 	if err != nil {
 		st.log.Errorf("Error deleting chat messages %v: %v", event.JID, err)
 	}
-	err = st.storage.ChatEphemeralSetting.DeleteChatEphemeralSetting(event.JID)
+	err = st.storage.ChatEphemeralSetting.DeleteChatEphemeralSetting(event.JID, event.Timestamp)
 	if err != nil {
 		st.log.Errorf("Error deleting chat ephemeral setting %v: %v", event.JID, err)
 	}

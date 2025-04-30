@@ -133,7 +133,7 @@ func (g *GroupCacheStorage) GetGroup(jid types.JID) (*types.GroupInfo, error) {
 }
 
 func (g *GroupCacheStorage) DeleteGroup(jid types.JID) error {
-	err := g.chatEphemeralSetting.DeleteChatEphemeralSetting(jid)
+	err := g.chatEphemeralSetting.DeleteChatEphemeralSetting(jid, time.Now())
 	if err != nil {
 		g.log.Warnf("Deleting chat ephemeral setting for group failed %v: %v", jid, err)
 	}

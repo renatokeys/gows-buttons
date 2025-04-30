@@ -2,6 +2,7 @@ package sqlstorage
 
 import (
 	"fmt"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/avast/retry-go"
@@ -84,8 +85,12 @@ func (s SqlMessageStore) GetMessage(id types.MessageID) (msg *storage.StoredMess
 	return msg, err
 }
 
-func (s SqlMessageStore) DeleteChatMessages(jid types.JID) error {
-	return s.DeleteBy([]sq.Sqlizer{sq.Eq{"jid": jid}})
+func (s SqlMessageStore) DeleteChatMessages(jid types.JID, deleteBefore time.Time) error {
+	conditions := []sq.Sqlizer{
+		sq.Eq{"jid": jid},
+		sq.Lt{"timestamp": deleteBefore},
+	}
+	return s.DeleteBy(conditions)
 }
 
 func (s SqlMessageStore) DeleteMessage(id types.MessageID) error {

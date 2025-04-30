@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"time"
+
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 )
@@ -19,7 +21,7 @@ type MessageStorage interface {
 	GetAllMessages(filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
 	GetChatMessages(jid types.JID, filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
 	GetMessage(id types.MessageID) (*StoredMessage, error)
-	DeleteChatMessages(jid types.JID) error
+	DeleteChatMessages(jid types.JID, deleteBefore time.Time) error
 	DeleteMessage(id types.MessageID) error
 }
 
@@ -45,5 +47,5 @@ type ChatStorage interface {
 type ChatEphemeralSettingStorage interface {
 	GetChatEphemeralSetting(id types.JID) (*StoredChatEphemeralSetting, error)
 	UpdateChatEphemeralSetting(setting *StoredChatEphemeralSetting) error
-	DeleteChatEphemeralSetting(id types.JID) error
+	DeleteChatEphemeralSetting(id types.JID, deleteBefore time.Time) error
 }
