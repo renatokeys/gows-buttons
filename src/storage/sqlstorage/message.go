@@ -50,7 +50,7 @@ func (s SqlMessageStore) GetAllMessages(filters storage.MessageFilter, paginatio
 		case "sqlite3":
 			conditions = append(conditions, sq.Expr("json_extract(data, '$.Status') = ?", *filters.Status))
 		case "postgres":
-			conditions = append(conditions, sq.Expr("(data->>'Status')::int = ?", *filters.Status))
+			conditions = append(conditions, sq.Expr("(data::jsonb->>'Status')::int = ?", *filters.Status))
 		default:
 			return nil, fmt.Errorf("unsupported database driver: %s", s.db.DriverName())
 		}
