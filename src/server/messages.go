@@ -371,12 +371,9 @@ func (s *Server) MarkRead(ctx context.Context, req *__.MarkReadRequest) (*__.Emp
 		return nil, errors.New("invalid receipt type: " + req.Type.String())
 	}
 
-	var ids []types.MessageID
-	if len(req.MessageIds) != 0 {
-		ids = req.MessageIds
-	} else {
-		// id to ids array
-		ids = []types.MessageID{req.MessageId}
+	ids := req.MessageIds
+	if req.MessageId != "" {
+		ids = append(ids, req.MessageId)
 	}
 
 	if len(ids) == 0 {
