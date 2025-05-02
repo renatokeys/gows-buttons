@@ -86,7 +86,13 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 	switch event.(type) {
 	case *events.Message:
 		msg := event.(*events.Message)
-		st.handleSaveMessage(msg)
+		var status storage.Status
+		if msg.Info.IsFromMe {
+			status = storage.StatusServerAck
+		} else {
+			status = storage.StatusDeliveryAck
+		}
+		st.handleSaveMessage(msg, status)
 		st.handleMessageEvent(msg)
 	case *events.Receipt:
 		st.handleReceipt(event.(*events.Receipt))
@@ -106,18 +112,7 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 	}
 }
 
-func (st *StorageEventHandler) handleSaveMessage(event *events.Message) {
-	var status storage.Status
-	if event.SourceWebMsg != nil && event.SourceWebMsg.Status != nil {
-		status = storage.Status(*event.SourceWebMsg.Status)
-	} else {
-		if event.Info.IsFromMe {
-			status = storage.StatusServerAck
-		} else {
-			status = storage.StatusDeliveryAck
-		}
-	}
-
+func (st *StorageEventHandler) handleSaveMessage(event *events.Message, status storage.Status) {
 	messageToStore := &storage.StoredMessage{
 		Message: event,
 		Status:  status,
@@ -214,13 +209,23 @@ func (st *StorageEventHandler) handleHistorySync(event *events.HistorySync) {
 }
 
 func (st *StorageEventHandler) saveHistoryForOneChat(conv *waHistorySync.Conversation, chatJID types.JID) {
-	for _, historyMsg := range conv.GetMessages() {
-		evt, err := st.gows.ParseWebMessage(chatJID, historyMsg.GetMessage())
+	historyMessages := conv.GetMessages()
+	for _, historyMsg := range historyMessages {
+		message := historyMsg.GetMessage()
+		msg, err := st.gows.ParseWebMessage(chatJID, message)
 		if err != nil {
 			st.log.Errorf("Error parsing message: %v", err)
 			continue
 		}
-		st.handleSaveMessage(evt)
+
+		var status storage.Status
+		if msg.SourceWebMsg != nil && msg.SourceWebMsg.Status != nil {
+			status = storage.Status(*msg.SourceWebMsg.Status)
+		} else {
+			status = storage.StatusRead
+		}
+
+		st.handleSaveMessage(msg, status)
 	}
 	st.log.Debugf("Saved %v messages in %v", len(conv.GetMessages()), chatJID)
 
