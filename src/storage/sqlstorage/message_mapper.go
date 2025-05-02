@@ -87,7 +87,9 @@ func (f *MessageMapper) Marshal(msg *storage.StoredMessage) ([]byte, error) {
 	temp.UnavailableRequestID = msg.UnavailableRequestID
 	temp.RetryCount = msg.RetryCount
 	temp.NewsletterMeta = msg.NewsletterMeta
-	temp.Status = msg.Status
+	if msg.Status != nil {
+		temp.Status = *msg.Status
+	}
 	temp.IsReal = msg.IsReal
 
 	return json.Marshal(temp)
@@ -133,7 +135,7 @@ func (f *MessageMapper) Unmarshal(data []byte, msg *storage.StoredMessage) error
 	msg.UnavailableRequestID = temp.UnavailableRequestID
 	msg.RetryCount = temp.RetryCount
 	msg.NewsletterMeta = temp.NewsletterMeta
-	msg.Status = temp.Status
+	msg.Status = &temp.Status
 	msg.IsReal = temp.IsReal
 
 	// Unmarshal Message if present

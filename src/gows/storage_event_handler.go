@@ -92,7 +92,7 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 		} else {
 			status = storage.StatusDeliveryAck
 		}
-		st.handleSaveMessage(msg, status)
+		st.handleSaveMessage(msg, &status)
 		st.handleMessageEvent(msg)
 	case *events.Receipt:
 		st.handleReceipt(event.(*events.Receipt))
@@ -112,7 +112,7 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 	}
 }
 
-func (st *StorageEventHandler) handleSaveMessage(event *events.Message, status storage.Status) {
+func (st *StorageEventHandler) handleSaveMessage(event *events.Message, status *storage.Status) {
 	messageToStore := &storage.StoredMessage{
 		Message: event,
 		Status:  status,
@@ -183,10 +183,10 @@ func (st *StorageEventHandler) handleReceipt(event *events.Receipt) {
 			st.log.Errorf("Error getting message %v(%v): %v", event.Chat, id, err)
 			continue
 		}
-		if msg.Status >= status {
+		if msg.Status != nil && *msg.Status >= status {
 			continue
 		}
-		msg.Status = status
+		msg.Status = &status
 		err = st.storage.Messages.UpsertOneMessage(msg)
 		if err != nil {
 			st.log.Errorf("Error updating status for message %v(%v): %v", event.Chat, id, err)
@@ -221,11 +221,9 @@ func (st *StorageEventHandler) saveHistoryForOneChat(conv *waHistorySync.Convers
 		var status storage.Status
 		if msg.SourceWebMsg != nil && msg.SourceWebMsg.Status != nil {
 			status = storage.Status(*msg.SourceWebMsg.Status)
-		} else {
-			status = storage.StatusRead
 		}
 
-		st.handleSaveMessage(msg, status)
+		st.handleSaveMessage(msg, &status)
 	}
 	st.log.Debugf("Saved %v messages in %v", len(conv.GetMessages()), chatJID)
 

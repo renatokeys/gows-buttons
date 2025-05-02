@@ -23,7 +23,7 @@ const (
 type StoredMessage struct {
 	*events.Message
 	IsReal bool
-	Status Status
+	Status *Status
 }
 
 type StoredContact struct {
