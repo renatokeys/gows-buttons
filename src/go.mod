@@ -46,15 +46,15 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
-	go.mau.fi/libsignal v0.1.2 // indirect
+	go.mau.fi/libsignal v0.2.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250430033817-10f97448ad05 // branch: fork-main-v1022192018
+replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250516100239-fc308e5aa3f5
