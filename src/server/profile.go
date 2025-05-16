@@ -14,7 +14,7 @@ func (s *Server) SetProfileName(ctx context.Context, req *__.ProfileNameRequest)
 		return nil, err
 	}
 	patch := appstate.BuildSettingPushName(req.Name)
-	err = cli.SendAppState(patch)
+	err = cli.SendAppState(ctx, patch)
 	if err != nil {
 		return nil, err
 	}

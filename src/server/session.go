@@ -85,6 +85,7 @@ func (s *Server) RequestCode(ctx context.Context, req *__.PairCodeRequest) (*__.
 		return nil, err
 	}
 	code, err := cli.PairPhone(
+		ctx,
 		req.GetPhone(),
 		true,
 		whatsmeow.PairClientChrome,
@@ -101,7 +102,7 @@ func (s *Server) Logout(ctx context.Context, req *__.Session) (*__.Empty, error)
 	if err != nil {
 		return nil, err
 	}
-	err = cli.Logout()
+	err = cli.Logout(ctx)
 	if err != nil {
 		if errors.Is(err, whatsmeow.ErrNotLoggedIn) {
 			// Ignore not logged in error

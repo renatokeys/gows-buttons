@@ -21,7 +21,7 @@ func (gows *GoWS) SendStatusMessage(ctx context.Context, to types.JID, msg *waE2
 	allParticipants := extra.Participants
 	if len(allParticipants) == 0 {
 		// No participants provided, fetch them
-		allParticipants, err = gows.int.GetBroadcastListParticipants(to)
+		allParticipants, err = gows.int.GetBroadcastListParticipants(ctx, to)
 		if err != nil {
 			return nil, err
 		}

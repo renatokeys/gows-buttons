@@ -119,7 +119,7 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 	if err != nil {
 		return nil, err
 	}
-	deviceStore, err := container.GetFirstDevice()
+	deviceStore, err := container.GetFirstDevice(ctx)
 	if err != nil {
 		_ = container.Close()
 		return nil, err

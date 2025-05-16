@@ -1,6 +1,7 @@
 package sqlstorage
 
 import (
+	"context"
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -34,7 +35,7 @@ func New(dialect, address string, log waLog.Logger) (*GContainer, error) {
 	}
 
 	container := sqlstore.NewWithDB(db.DB, dialect, log)
-	err = container.Upgrade()
+	err = container.Upgrade(context.TODO())
 	if err != nil {
 		defer container.Close()
 		return nil, fmt.Errorf("failed to upgrade database: %w", err)

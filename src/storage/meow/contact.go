@@ -1,6 +1,7 @@
 package sqlstorage
 
 import (
+	"context"
 	"errors"
 	"github.com/devlikeapro/gows/storage"
 	"go.mau.fi/whatsmeow/store"
@@ -29,7 +30,7 @@ func toContact(jid types.JID, info types.ContactInfo) *storage.StoredContact {
 }
 
 func (s MeowContactStorage) GetContact(user types.JID) (*storage.StoredContact, error) {
-	contactInfo, err := s.store.Contacts.GetContact(user)
+	contactInfo, err := s.store.Contacts.GetContact(context.TODO(), user)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +39,7 @@ func (s MeowContactStorage) GetContact(user types.JID) (*storage.StoredContact, 
 }
 
 func (s MeowContactStorage) GetAllContacts(sortBy storage.Sort, pagination storage.Pagination) ([]*storage.StoredContact, error) {
-	contactInfos, err := s.store.Contacts.GetAllContacts()
+	contactInfos, err := s.store.Contacts.GetAllContacts(context.TODO())
 	if err != nil {
 		return nil, err
 	}
