@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/devlikeapro/gows/gows"
 	"strconv"
 	"time"
 
@@ -76,7 +77,17 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		extra.ID = req.Id
 	}
 
-	if req.Media == nil {
+	if len(req.Contacts) > 0 {
+		// Share contacts messages
+		contacts := make([]gows.Contact, 0, len(req.Contacts))
+		for _, contact := range req.Contacts {
+			contacts = append(contacts, gows.Contact{
+				DisplayName: contact.DisplayName,
+				Vcard:       contact.Vcard,
+			})
+		}
+		message = gows.BuildContactsMessage(contacts, contextInfo)
+	} else if req.Media == nil {
 		// Text Message
 		message = cli.BuildTextMessage(req.Text)
 		// Link Preview

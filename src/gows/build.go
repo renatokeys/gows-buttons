@@ -118,3 +118,41 @@ func ExtractContextInfo(event *events.Message) *waE2E.ContextInfo {
 		return nil
 	}
 }
+
+type Contact struct {
+	DisplayName string
+	Vcard       string
+}
+
+func buildContactMessage(contact Contact) *waE2E.ContactMessage {
+	return &waE2E.ContactMessage{
+		DisplayName: proto.String(contact.DisplayName),
+		Vcard:       proto.String(contact.Vcard),
+	}
+}
+
+func BuildContactsMessage(contacts []Contact, contextInfo *waE2E.ContextInfo) (message *waE2E.Message) {
+	if len(contacts) == 0 {
+		return nil
+	}
+
+	// Single contact
+	if len(contacts) == 1 {
+		message = &waE2E.Message{
+			ContactMessage: buildContactMessage(contacts[0]),
+		}
+		message.ContactMessage.ContextInfo = contextInfo
+		return message
+	}
+	// Multiple contacts
+	message = &waE2E.Message{
+		ContactsArrayMessage: &waE2E.ContactsArrayMessage{
+			Contacts: make([]*waE2E.ContactMessage, len(contacts)),
+		},
+	}
+	for i, contact := range contacts {
+		message.ContactsArrayMessage.Contacts[i] = buildContactMessage(contact)
+	}
+	message.ContactsArrayMessage.ContextInfo = contextInfo
+	return message
+}

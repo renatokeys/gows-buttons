@@ -273,6 +273,11 @@ message LinkPreview {
   bytes image = 4;
 }
 
+message vCardContact {
+  string displayName = 1;
+  string vcard = 3;
+}
+
 message MessageRequest {
   Session session = 1;
   string jid = 2;
@@ -292,6 +297,9 @@ message MessageRequest {
 
   // Custom link preview
   LinkPreview preview = 12;
+
+  // Contact message
+  repeated vCardContact contacts = 13;
 }
 
 message MessageReaction {
