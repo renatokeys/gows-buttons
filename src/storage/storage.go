@@ -13,6 +13,8 @@ type Storage struct {
 	Chats                ChatStorage
 	Groups               GroupStorage
 	ChatEphemeralSetting ChatEphemeralSettingStorage
+	Labels               LabelStorage
+	LabelAssociations    LabelAssociationStorage
 }
 
 type MessageStorage interface {
@@ -48,4 +50,18 @@ type ChatEphemeralSettingStorage interface {
 	GetChatEphemeralSetting(id types.JID) (*StoredChatEphemeralSetting, error)
 	UpdateChatEphemeralSetting(setting *StoredChatEphemeralSetting) error
 	DeleteChatEphemeralSetting(id types.JID, deleteBefore time.Time) error
+}
+
+type LabelStorage interface {
+	GetAllLabels() ([]*Label, error)
+	GetLabelById(id string) (*Label, error)
+	UpsertLabel(label *Label) error
+	DeleteLabel(id string) error
+}
+
+type LabelAssociationStorage interface {
+	GetJIDsByLabelID(labelID string) ([]types.JID, error)
+	GetLabelIDsByJID(jid types.JID) ([]string, error)
+	AddAssociation(jid types.JID, labelID string) error
+	RemoveAssociation(jid types.JID, labelID string) error
 }

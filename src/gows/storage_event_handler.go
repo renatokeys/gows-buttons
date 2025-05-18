@@ -2,6 +2,7 @@ package gows
 
 import (
 	"runtime/debug"
+	"time"
 
 	"github.com/avast/retry-go"
 	"github.com/devlikeapro/gows/storage"
@@ -109,6 +110,11 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 		st.handleGroupInfo(event.(*events.GroupInfo))
 	case *events.DeleteChat:
 		st.handleDeleteChat(event.(*events.DeleteChat))
+	// Labels
+	case *events.LabelEdit:
+		st.handleLabelEdit(event.(*events.LabelEdit))
+	case *events.LabelAssociationChat:
+		st.handleLabelAssociationChat(event.(*events.LabelAssociationChat))
 	}
 }
 
@@ -280,4 +286,73 @@ func (st *StorageEventHandler) handleDeleteChat(event *events.DeleteChat) {
 		st.log.Errorf("Error deleting chat ephemeral setting %v: %v", event.JID, err)
 	}
 	st.log.Debugf("Deleted chat %v", event.JID)
+}
+
+func (st *StorageEventHandler) handleLabelEdit(event *events.LabelEdit) {
+	if event.Action == nil {
+		return
+	}
+	action := *event.Action
+	// Delete
+	if action.Deleted != nil && *action.Deleted {
+		err := st.storage.Labels.DeleteLabel(event.LabelID)
+		if err != nil {
+			st.log.Errorf("Error deleting label %v: %v", event.LabelID, err)
+			return
+		}
+		st.log.Debugf("Deleted label %v", event.LabelID)
+		return
+	}
+
+	// Create
+	label := &storage.Label{
+		ID:    event.LabelID,
+		Name:  *action.Name,
+		Color: int(*action.Color),
+	}
+
+	err := st.storage.Labels.UpsertLabel(label)
+	if err != nil {
+		st.log.Errorf("Error upserting label %v: %v", label.ID, err)
+		return
+	}
+
+	st.log.Debugf("Upserted label %v (%v)", label.ID, label.Name)
+}
+
+func (st *StorageEventHandler) handleLabelAssociationChat(event *events.LabelAssociationChat) {
+	// Get the association data directly from the event
+	jid := event.JID
+	labelID := event.LabelID
+	labeled := event.Action.Labeled
+
+	if labeled != nil && *labeled {
+		// Make sure we have the label
+		// it can happen on full sync or event disordering
+		err := retry.Do(
+			func() error {
+				_, err := st.storage.Labels.GetLabelById(labelID)
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+			retry.Attempts(6),
+			retry.Delay(100*time.Millisecond),
+		)
+
+		err = st.storage.LabelAssociations.AddAssociation(jid, labelID)
+		if err != nil {
+			st.log.Errorf("Error adding label association for JID %v and label %v: %v", jid, labelID, err)
+			return
+		}
+		st.log.Debugf("Added label association for JID %v and label %v", jid, labelID)
+	} else {
+		err := st.storage.LabelAssociations.RemoveAssociation(jid, labelID)
+		if err != nil {
+			st.log.Errorf("Error removing label association for JID %v and label %v: %v", jid, labelID, err)
+			return
+		}
+		st.log.Debugf("Removed label association for JID %v and label %v", jid, labelID)
+	}
 }

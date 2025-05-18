@@ -121,10 +121,23 @@ service MessageService {
   rpc CreateNewsletter(CreateNewsletterRequest) returns (Newsletter);
   rpc NewsletterToggleMute(NewsletterToggleMuteRequest) returns (Empty);
   rpc NewsletterToggleFollow(NewsletterToggleFollowRequest) returns (Empty);
+
+  //
+  // Labels
+  //
+  rpc GetLabels(GetLabelsRequest) returns (JsonList);
+  rpc UpsertLabel(UpsertLabelRequest) returns (Empty);
+  rpc DeleteLabel(DeleteLabelRequest) returns (Empty);
+  rpc AddChatLabel(ChatLabelRequest) returns (Empty);
+  rpc RemoveChatLabel(ChatLabelRequest) returns (Empty);
+  rpc GetLabelsByJid(EntityByIdRequest) returns (JsonList);
+  rpc GetChatsByLabelId(EntityByIdRequest) returns (JsonList);
+
   //
   // Media
   //
   rpc DownloadMedia(DownloadMediaRequest) returns (DownloadMediaResponse);
+
   //
   // Storage
   //
@@ -135,6 +148,7 @@ service MessageService {
   rpc GetContactById(EntityByIdRequest) returns (Json);
 
   rpc GetChats(GetChatsRequest) returns (JsonList);
+
 }
 
 
@@ -572,4 +586,34 @@ message GetChatsRequest {
   Session session = 1;
   SortBy sortBy = 2;
   Pagination pagination = 3;
+}
+
+//
+// Labels
+//
+message GetLabelsRequest {
+  Session session = 1;
+}
+
+message Label {
+  string id = 1;
+  string name = 2;
+  int32 color = 4;
+}
+
+message UpsertLabelRequest {
+  Session session = 1;
+  Label label = 2;
+}
+
+message DeleteLabelRequest{
+  Session session = 1;
+  Label label = 2;
+}
+
+
+message ChatLabelRequest {
+  Session session = 1;
+  string chatId = 2;
+  string labelId = 3;
 }

@@ -59,3 +59,35 @@ var ChatEphemeralSettingsTable = Table{
 		"data",
 	},
 }
+
+var LabelsTable = Table{
+	Name: "gows_labels",
+	Columns: []string{
+		"id",
+		"data",
+	},
+	DataField: "data",
+	OnConflict: []string{
+		"id",
+	},
+	UpdateOnConflict: []string{
+		"data",
+	},
+}
+
+var LabelAssociationsTable = Table{
+	Name: "gows_label_associations",
+	Columns: []string{
+		"jid",
+		"label_id",
+		"data",
+	},
+	DataField: "data",
+	OnConflict: []string{
+		"jid",
+		"label_id",
+	},
+	UpdateOnConflict: []string{
+		"data",
+	},
+}

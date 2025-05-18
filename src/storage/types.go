@@ -83,3 +83,16 @@ type MessageFilter struct {
 	FromMe       *bool
 	Status       *Status
 }
+
+// Label represents a label that can be associated with chats
+type Label struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Color int    `json:"color"`
+}
+
+// LabelAssociation represents an association between a label and a JID
+type LabelAssociation struct {
+	JID     types.JID `json:"jid"`
+	LabelID string    `json:"label_id"`
+}
