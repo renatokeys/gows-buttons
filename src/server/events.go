@@ -59,7 +59,7 @@ func (s *Server) StreamEvents(req *__.Session, stream grpc.ServerStreamingServer
 	}
 }
 
-func (s *Server) IssueEvent(session string, event interface{}) {
+func (s *Server) SendEventToAllListeners(session string, event interface{}) {
 	listeners := s.getListeners(session)
 	for _, listener := range listeners {
 		go func() {

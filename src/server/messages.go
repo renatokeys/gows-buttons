@@ -77,7 +77,26 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		extra.ID = req.Id
 	}
 
-	if len(req.Contacts) > 0 {
+	if req.Event != nil {
+		var location *gows.EventLocation
+		if req.Event.Location != nil {
+			location = &gows.EventLocation{
+				Name:             req.Event.Location.Name,
+				DegreesLongitude: req.Event.Location.DegreesLongitude,
+				DegreesLatitude:  req.Event.Location.DegreesLatitude,
+			}
+		}
+		event := &gows.EventMessage{
+			Name:               req.Event.Name,
+			Description:        req.Event.Description,
+			StartTime:          req.Event.StartTime,
+			EndTime:            req.Event.EndTime,
+			ExtraGuestsAllowed: req.Event.ExtraGuestsAllowed,
+			Location:           location,
+		}
+		message = gows.BuildEventCreation(event)
+		message.EventMessage.ContextInfo = contextInfo
+	} else if len(req.Contacts) > 0 {
 		// Share contacts messages
 		contacts := make([]gows.Contact, 0, len(req.Contacts))
 		for _, contact := range req.Contacts {
@@ -509,6 +528,44 @@ func (s *Server) SendButtonReply(ctx context.Context, req *__.ButtonReplyRequest
 	message.MessageContextInfo = &waE2E.MessageContextInfo{
 		MessageSecret: random.Bytes(32),
 	}
+
+	res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
+	if err != nil {
+		return nil, err
+	}
+	data, err := toJson(res)
+	if err != nil {
+		cli.Log.Errorf("Error marshaling message for response %v: %v", res.Info.ID, err)
+	}
+	msg := __.MessageResponse{
+		Id:        res.Info.ID,
+		Timestamp: res.Info.Timestamp.Unix(),
+		Message:   data,
+	}
+	return &msg, nil
+}
+
+func (s *Server) CancelEventMessage(ctx context.Context, req *__.CancelEventMessageRequest) (*__.MessageResponse, error) {
+	cli, err := s.Sm.Get(req.GetSession().GetId())
+	if err != nil {
+		return nil, err
+	}
+	jid, err := types.ParseJID(req.Jid)
+	if err != nil {
+		return nil, err
+	}
+
+	eventMessage, err := cli.Storage.Messages.GetMessage(req.MessageId)
+	if err != nil {
+		return nil, err
+	}
+	if eventMessage == nil {
+		return nil, fmt.Errorf("event message not found: %s", req.MessageId)
+	}
+	update := eventMessage.RawMessage.EventMessage
+	update.IsCanceled = proto.Bool(true)
+	update.ContextInfo = nil
+	message, err := cli.BuildEventUpdate(ctx, &eventMessage.Info, update)
 
 	res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
 	if err != nil {

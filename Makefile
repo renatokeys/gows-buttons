@@ -14,6 +14,7 @@ build-proto:
 		-I=. \
 		--go_out=./src/proto \
 		--go-grpc_out=./src/proto \
+		--experimental_allow_proto3_optional \
 		 proto/*.proto
 
 build:

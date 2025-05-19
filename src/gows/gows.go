@@ -38,6 +38,12 @@ func (gows *GoWS) reissueEvent(event interface{}) {
 			PushName: gows.Store.PushName,
 		}
 
+	case *events.Message:
+		data = event
+		if event.(*events.Message).Message.GetEncEventResponseMessage() != nil {
+			go gows.handleEncEventResponse(gows.Context, event.(*events.Message))
+		}
+
 	default:
 		data = event
 	}
@@ -106,11 +112,6 @@ func (gows *GoWS) GetOwnId() types.JID {
 		return types.EmptyJID
 	}
 	return *id
-}
-
-type ConnectedEventData struct {
-	ID       *types.JID
-	PushName string
 }
 
 func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address string) (*GoWS, error) {

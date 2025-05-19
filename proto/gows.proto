@@ -17,8 +17,14 @@ message OptionalUInt32 {
 message OptionalUInt64 {
   uint64 value = 1;
 }
+message OptionalInt64 {
+  int64 value = 1;
+}
 message OptionalBool {
   bool value = 1;
+}
+message OptionalDouble {
+  double value = 1;
 }
 
 //
@@ -132,6 +138,11 @@ service MessageService {
   rpc RemoveChatLabel(ChatLabelRequest) returns (Empty);
   rpc GetLabelsByJid(EntityByIdRequest) returns (JsonList);
   rpc GetChatsByLabelId(EntityByIdRequest) returns (JsonList);
+
+  //
+  // Events
+  //
+  rpc CancelEventMessage(CancelEventMessageRequest) returns (MessageResponse);
 
   //
   // Media
@@ -292,6 +303,21 @@ message vCardContact {
   string vcard = 3;
 }
 
+message EventLocation {
+  string name = 1;
+  optional double degreesLongitude = 2;
+  optional double degreesLatitude = 3;
+}
+
+message EventMessage {
+  string name = 1;
+  optional string description = 2;
+  int64 startTime = 3;
+  optional int64 endTime = 4;
+  bool extraGuestsAllowed = 5;
+  EventLocation location = 6;
+}
+
 message MessageRequest {
   Session session = 1;
   string jid = 2;
@@ -314,6 +340,9 @@ message MessageRequest {
 
   // Contact message
   repeated vCardContact contacts = 13;
+
+  // Event message
+  EventMessage event = 14;
 }
 
 message MessageReaction {
@@ -388,7 +417,7 @@ message MarkReadRequest {
   string sender = 3;
   string messageId = 4;
   ReceiptType type = 5;
-  repeated string messageIds = 6;  
+  repeated string messageIds = 6;
 }
 
 message CheckPhonesRequest {
@@ -616,4 +645,13 @@ message ChatLabelRequest {
   Session session = 1;
   string chatId = 2;
   string labelId = 3;
+}
+
+//
+// Events
+//
+message CancelEventMessageRequest {
+  Session session = 1;
+  string jid = 2;
+  string messageId = 4;
 }
