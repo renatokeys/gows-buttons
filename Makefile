@@ -17,6 +17,10 @@ build-proto:
 		--experimental_allow_proto3_optional \
 		 proto/*.proto
 
+tidy:
+	cd src && \
+	go mod tidy
+
 build:
 	cd src && \
 	go build -o ../bin/gows main.go
