@@ -110,6 +110,8 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 		st.handleGroupInfo(event.(*events.GroupInfo))
 	case *events.DeleteChat:
 		st.handleDeleteChat(event.(*events.DeleteChat))
+	case *events.Contact:
+		st.handleContact(event.(*events.Contact))
 	// Labels
 	case *events.LabelEdit:
 		st.handleLabelEdit(event.(*events.LabelEdit))
@@ -354,5 +356,59 @@ func (st *StorageEventHandler) handleLabelAssociationChat(event *events.LabelAss
 			return
 		}
 		st.log.Debugf("Removed label association for JID %v and label %v", jid, labelID)
+	}
+}
+
+func (st *StorageEventHandler) handleContact(contact *events.Contact) {
+	st.handleContactLidJidMapping(contact)
+}
+
+func (st *StorageEventHandler) handleContactLidJidMapping(contact *events.Contact) {
+	ctx := st.gows.Context
+	cli := st.gows.Client
+
+	// Save lid to jid mapping
+	if cli.Store.LIDs == nil {
+		return
+	}
+
+	var err error
+	var lid = types.EmptyJID
+	var jid = types.EmptyJID
+
+	switch contact.JID.Server {
+	// jid => lid
+	case types.DefaultUserServer:
+		jid = contact.JID
+		act := contact.Action
+		if act.LidJID != nil && *act.LidJID != "" {
+			lid, err = types.ParseJID(*act.LidJID)
+			if err != nil {
+				st.log.Errorf("Failed to parse LID JID: %v", err)
+				return
+			}
+		}
+
+	// lid => jid
+	case types.HiddenUserServer:
+		lid = contact.JID
+		act := contact.Action
+		if act.PnJID != nil && *act.PnJID != "" {
+			jid, err = types.ParseJID(*act.PnJID)
+			if err != nil {
+				st.log.Errorf("Failed to parse PN JID: %v", err)
+				return
+			}
+		}
+	}
+
+	// Save lid to jid mapping
+	if lid == types.EmptyJID && jid == types.EmptyJID {
+		return
+	}
+	err = cli.Store.LIDs.PutLIDMapping(ctx, lid, jid)
+	if err != nil {
+		st.log.Errorf("Failed to update LID mapping (%v => %v): %v", lid, jid, err)
+		return
 	}
 }
