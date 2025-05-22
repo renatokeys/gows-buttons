@@ -17,5 +17,6 @@ func BuildStorage(container *sqlstorage.GContainer, gows *GoWS) *storage.Storage
 	st.Chats = views.NewChatView(st.Messages, st.Contacts, st.Groups)
 	st.Labels = container.NewLabelStorage()
 	st.LabelAssociations = container.NewLabelAssociationStorage()
+	st.Lidmap = container.NewLidmapStorage()
 	return st
 }

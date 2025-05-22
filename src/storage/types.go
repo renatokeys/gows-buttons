@@ -96,3 +96,9 @@ type LabelAssociation struct {
 	JID     types.JID `json:"jid"`
 	LabelID string    `json:"label_id"`
 }
+
+// LidmapEntry represents a lid/pn pair
+type LidmapEntry struct {
+	Lid types.JID `json:"lid"`
+	Pn  types.JID `json:"pn"`
+}

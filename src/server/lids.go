@@ -2,26 +2,40 @@ package server
 
 import (
 	"context"
-	"errors"
 	"go.mau.fi/whatsmeow/types"
 
 	__ "github.com/devlikeapro/gows/proto"
 )
 
 func (s *Server) GetAllLids(ctx context.Context, req *__.GetLidsRequest) (*__.JsonList, error) {
-	_, err := s.Sm.Get(req.GetSession().GetId())
+	gows, err := s.Sm.Get(req.GetSession().GetId())
 	if err != nil {
 		return nil, err
 	}
-	return nil, errors.New("not implemented")
+
+	entries, err := gows.Storage.Lidmap.GetAllLidMap()
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert slice to JSON list
+	return toJsonList(entries)
 }
 
 func (s *Server) GetLidsCount(ctx context.Context, req *__.Session) (*__.OptionalUInt64, error) {
-	_, err := s.Sm.Get(req.GetId())
+	gows, err := s.Sm.Get(req.GetId())
 	if err != nil {
 		return nil, err
 	}
-	return nil, errors.New("not implemented")
+
+	count, err := gows.Storage.Lidmap.GetLidCount()
+	if err != nil {
+		return nil, err
+	}
+
+	return &__.OptionalUInt64{
+		Value: uint64(count),
+	}, nil
 }
 
 func (s *Server) FindPNByLid(ctx context.Context, req *__.EntityByIdRequest) (*__.OptionalString, error) {
@@ -35,7 +49,7 @@ func (s *Server) FindPNByLid(ctx context.Context, req *__.EntityByIdRequest) (*_
 	}
 
 	cli := gows.Client
-	lid, err := cli.Store.LIDs.GetLIDForPN(ctx, pn)
+	lid, err := cli.Store.LIDs.GetPNForLID(ctx, pn)
 	if err != nil {
 		return nil, err
 	}

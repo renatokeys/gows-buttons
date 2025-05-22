@@ -15,6 +15,7 @@ type Storage struct {
 	ChatEphemeralSetting ChatEphemeralSettingStorage
 	Labels               LabelStorage
 	LabelAssociations    LabelAssociationStorage
+	Lidmap               LidmapStorage
 }
 
 type MessageStorage interface {
@@ -64,4 +65,11 @@ type LabelAssociationStorage interface {
 	GetLabelIDsByJID(jid types.JID) ([]string, error)
 	AddAssociation(jid types.JID, labelID string) error
 	RemoveAssociation(jid types.JID, labelID string) error
+}
+
+type LidmapStorage interface {
+	// GetAllLidMap returns all lid/pn pairs from the database as an array of LidmapEntry
+	GetAllLidMap() ([]LidmapEntry, error)
+	// GetLidCount returns the count of lids in the database
+	GetLidCount() (int, error)
 }
