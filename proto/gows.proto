@@ -78,6 +78,14 @@ service MessageService {
   rpc SetProfilePicture(SetProfilePictureRequest) returns (Empty);
 
   //
+  // Lids
+  //
+  rpc GetAllLids(GetLidsRequest) returns (JsonList);
+  rpc GetLidsCount(Session) returns (OptionalUInt64);
+  rpc FindPNByLid(EntityByIdRequest) returns (OptionalString);
+  rpc FindLIDByPhoneNumber(EntityByIdRequest) returns (OptionalString);
+
+  //
   // Groups
   //
   rpc FetchGroups(Session) returns (Empty);
@@ -654,4 +662,11 @@ message CancelEventMessageRequest {
   Session session = 1;
   string jid = 2;
   string messageId = 4;
+}
+
+//
+// Lids
+//
+message GetLidsRequest {
+  Session session = 1;
 }
