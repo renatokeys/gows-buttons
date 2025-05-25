@@ -15,3 +15,8 @@ type EventMessageResponse struct {
 	*events.Message
 	EventResponse *waE2E.EventResponseMessage
 }
+
+type PollVoteEvent struct {
+	*events.Message
+	Votes *[]string
+}

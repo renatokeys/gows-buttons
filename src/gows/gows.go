@@ -42,6 +42,8 @@ func (gows *GoWS) reissueEvent(event interface{}) {
 		data = event
 		if event.(*events.Message).Message.GetEncEventResponseMessage() != nil {
 			go gows.handleEncEventResponse(gows.Context, event.(*events.Message))
+		} else if event.(*events.Message).Message.GetPollUpdateMessage() != nil {
+			go gows.handleEncPollVote(gows.Context, event.(*events.Message))
 		}
 
 	default:

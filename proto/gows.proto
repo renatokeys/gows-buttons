@@ -351,6 +351,9 @@ message MessageRequest {
 
   // Event message
   EventMessage event = 14;
+
+  // Poll message
+  PollMessage poll = 15;
 }
 
 message MessageReaction {
@@ -670,3 +673,13 @@ message CancelEventMessageRequest {
 message GetLidsRequest {
   Session session = 1;
 }
+
+//
+// Poll
+//
+message PollMessage {
+  string name = 1;
+  repeated string options = 2;
+  bool multipleAnswers = 3;
+}
+

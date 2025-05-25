@@ -77,7 +77,23 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		extra.ID = req.Id
 	}
 
-	if req.Event != nil {
+	if req.GetPoll() != nil {
+		poll := req.Poll
+		selectableOptionCount := 0
+		switch poll.MultipleAnswers {
+		case false:
+			selectableOptionCount = 1
+		case true:
+			selectableOptionCount = 0
+		}
+		message = cli.BuildPollCreationV3(poll.Name, poll.Options, selectableOptionCount)
+		if message.PollCreationMessageV3 != nil {
+			message.PollCreationMessageV3.ContextInfo = contextInfo
+		}
+		if message.PollCreationMessage != nil {
+			message.PollCreationMessage.ContextInfo = contextInfo
+		}
+	} else if req.Event != nil {
 		var location *gows.EventLocation
 		if req.Event.Location != nil {
 			location = &gows.EventLocation{

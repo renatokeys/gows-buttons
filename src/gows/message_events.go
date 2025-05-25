@@ -58,7 +58,7 @@ func BuildEventCreation(
 	}
 }
 
-func (gows *GoWS) DecryptEventResponse(ctx context.Context, response *events.Message) (*waE2E.EventResponseMessage, error) {
+func (gows *GoWS) extractEventResponse(ctx context.Context, response *events.Message) (*waE2E.EventResponseMessage, error) {
 	encEventResponseMessage := response.Message.GetEncEventResponseMessage()
 	if encEventResponseMessage == nil {
 		return nil, ErrNotEventResponseMessage
@@ -82,10 +82,9 @@ func (gows *GoWS) DecryptEventResponse(ctx context.Context, response *events.Mes
 }
 
 func (gows *GoWS) handleEncEventResponse(ctx context.Context, msg *events.Message) {
-	eventResponse, err := gows.DecryptEventResponse(ctx, msg)
+	eventResponse, err := gows.extractEventResponse(ctx, msg)
 	if err != nil {
 		gows.Log.Errorf("Failed to decrypt event response: %v", err)
-		return
 	}
 	data := &EventMessageResponse{
 		Message:       msg,
