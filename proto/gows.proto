@@ -622,10 +622,15 @@ message GetContactsRequest {
 //
 // Storage - Chats
 //
+message ChatFilter {
+  repeated string jids = 1;
+}
+
 message GetChatsRequest {
   Session session = 1;
   SortBy sortBy = 2;
   Pagination pagination = 3;
+  ChatFilter filter = 4;
 }
 
 //
@@ -682,4 +687,3 @@ message PollMessage {
   repeated string options = 2;
   bool multipleAnswers = 3;
 }
-

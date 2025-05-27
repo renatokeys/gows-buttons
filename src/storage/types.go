@@ -84,6 +84,10 @@ type MessageFilter struct {
 	Status       *Status
 }
 
+type ChatFilter struct {
+	Jids []types.JID
+}
+
 // Label represents a label that can be associated with chats
 type Label struct {
 	ID    string `json:"id"`

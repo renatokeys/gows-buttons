@@ -141,7 +141,22 @@ func (s *Server) GetChats(ctx context.Context, req *__.GetChatsRequest) (*__.Jso
 	}
 	pagination := toPagination(req.Pagination)
 	sort := toStorageSort(req.SortBy)
-	chats, err := cli.Storage.Chats.GetChats(sort, pagination)
+
+	// Create an empty filter
+	filter := storage.ChatFilter{}
+	if req.GetFilter() != nil {
+		jids := make([]types.JID, len(req.Filter.Jids))
+		for _, jid := range req.GetFilter().Jids {
+			jid, err := types.ParseJID(jid)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing jid %v: %w", jid, err)
+			}
+			jids = append(jids, jid)
+		}
+		filter.Jids = jids
+	}
+
+	chats, err := cli.Storage.Chats.GetChats(filter, sort, pagination)
 	if err != nil {
 		return nil, err
 	}
@@ -150,5 +165,4 @@ func (s *Server) GetChats(ctx context.Context, req *__.GetChatsRequest) (*__.Jso
 		return nil, fmt.Errorf("error marshaling chats: %w", err)
 	}
 	return response, nil
-
 }

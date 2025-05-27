@@ -130,8 +130,8 @@ func (s SqlMessageStore) getLastMessageSubquery() (*sq.SelectBuilder, error) {
 	}
 }
 
-// GetLastMessagesInChats retrieves the last messages in chats based on sorting and pagination.
-func (s SqlMessageStore) GetLastMessagesInChats(sortBy storage.Sort, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
+// GetLastMessagesInChats retrieves the last messages in chats based on filtering, sorting, and pagination.
+func (s SqlMessageStore) GetLastMessagesInChats(filter storage.ChatFilter, sortBy storage.Sort, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
 	// Generate the subquery to get the ID of the last message per chat
 	subQuery, err := s.getLastMessageSubquery()
 	if err != nil {
@@ -146,5 +146,10 @@ func (s SqlMessageStore) GetLastMessagesInChats(sortBy storage.Sort, pagination 
 	sql := sq.Select("data").
 		From(s.table.Name).
 		Where("id IN (" + subQueryText + ")")
+	if filter.Jids != nil && len(filter.Jids) > 0 {
+		// jid in jids array
+		sql = sql.Where(sq.Eq{"jid": filter.Jids})
+	}
+
 	return s.Retrieve(sql, pagination, []storage.Sort{sortBy})
 }

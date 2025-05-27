@@ -20,7 +20,7 @@ type Storage struct {
 
 type MessageStorage interface {
 	UpsertOneMessage(msg *StoredMessage) error
-	GetLastMessagesInChats(sortBy Sort, pagination Pagination) ([]*StoredMessage, error)
+	GetLastMessagesInChats(filter ChatFilter, sortBy Sort, pagination Pagination) ([]*StoredMessage, error)
 	GetAllMessages(filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
 	GetChatMessages(jid types.JID, filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
 	GetMessage(id types.MessageID) (*StoredMessage, error)
@@ -44,7 +44,7 @@ type ContactStorage interface {
 }
 
 type ChatStorage interface {
-	GetChats(sortBy Sort, pagination Pagination) ([]*StoredChat, error)
+	GetChats(filter ChatFilter, sortBy Sort, pagination Pagination) ([]*StoredChat, error)
 }
 
 type ChatEphemeralSettingStorage interface {
