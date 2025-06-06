@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	gowsLog "github.com/devlikeapro/gows/log"
 	pb "github.com/devlikeapro/gows/proto"
 	"github.com/devlikeapro/gows/server"
@@ -11,6 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"runtime/debug"
 )
@@ -57,10 +60,31 @@ func buildGrpcServer(log waLog.Logger) *grpc.Server {
 	return grpcServer
 }
 
-var socket string
+var (
+	socket    string
+	pprofFlag bool
+	pprofPort int
+)
 
 func init() {
 	flag.StringVar(&socket, "socket", "/tmp/gows.sock", "Socket path")
+	flag.BoolVar(&pprofFlag, "pprof", false, "Enable pprof HTTP server")
+	flag.IntVar(&pprofPort, "pprof-port", 6060, "Port for pprof HTTP server")
+}
+
+func startPprofServer(log waLog.Logger) {
+	if !pprofFlag {
+		return
+	}
+
+	addr := fmt.Sprintf("localhost:%d", pprofPort)
+	log.Infof("Starting pprof HTTP server on %s", addr)
+
+	go func() {
+		if err := http.ListenAndServe(addr, nil); err != nil {
+			log.Errorf("Failed to start pprof HTTP server: %v", err)
+		}
+	}()
 }
 
 func remove(path string) {
@@ -70,6 +94,10 @@ func remove(path string) {
 func main() {
 	flag.Parse()
 	log := gowsLog.Stdout("Server", "DEBUG", false)
+
+	// Start pprof HTTP server if enabled
+	startPprofServer(log)
+
 	// Build the server
 	grpcServer := buildGrpcServer(log)
 	// Open unix socket
