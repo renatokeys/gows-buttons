@@ -31,28 +31,33 @@ func (f *MessageMapper) ToFields(entity *storage.StoredMessage) map[string]inter
 		"is_real":   entity.IsReal,
 	}
 }
-func (f *MessageMapper) Marshal(msg *storage.StoredMessage) ([]byte, error) {
-	// Temporary structure to hold JSON data
-	var temp struct {
-		Info                  types.MessageInfo             `json:"Info"`
-		Message               json.RawMessage               `json:"Message"`
-		IsEphemeral           bool                          `json:"IsEphemeral"`
-		IsViewOnce            bool                          `json:"IsViewOnce"`
-		IsViewOnceV2          bool                          `json:"IsViewOnceV2"`
-		IsViewOnceV2Extension bool                          `json:"IsViewOnceV2Extension"`
-		IsDocumentWithCaption bool                          `json:"IsDocumentWithCaption"`
-		IsLottieSticker       bool                          `json:"IsLottieSticker"`
-		IsEdit                bool                          `json:"IsEdit"`
-		SourceWebMsg          json.RawMessage               `json:"SourceWebMsg"`
-		UnavailableRequestID  string                        `json:"UnavailableRequestID"`
-		RetryCount            int                           `json:"RetryCount"`
-		NewsletterMeta        *events.NewsletterMessageMeta `json:"NewsletterMeta"`
-		RawMessage            json.RawMessage               `json:"RawMessage"`
-		Status                storage.Status                `json:"Status"`
-		IsReal                bool                          `json:"IsReal"`
-	}
 
-	if msg.Message.Message != nil {
+// messageTemp is a reusable struct to reduce allocation
+// messageTemp is a reusable struct to reduce allocations
+type messageTemp struct {
+	Info                  types.MessageInfo             `json:"Info"`
+	Message               json.RawMessage               `json:"Message"`
+	IsEphemeral           bool                          `json:"IsEphemeral"`
+	IsViewOnce            bool                          `json:"IsViewOnce"`
+	IsViewOnceV2          bool                          `json:"IsViewOnceV2"`
+	IsViewOnceV2Extension bool                          `json:"IsViewOnceV2Extension"`
+	IsDocumentWithCaption bool                          `json:"IsDocumentWithCaption"`
+	IsLottieSticker       bool                          `json:"IsLottieSticker"`
+	IsEdit                bool                          `json:"IsEdit"`
+	SourceWebMsg          json.RawMessage               `json:"SourceWebMsg"`
+	UnavailableRequestID  string                        `json:"UnavailableRequestID"`
+	RetryCount            int                           `json:"RetryCount"`
+	NewsletterMeta        *events.NewsletterMessageMeta `json:"NewsletterMeta"`
+	RawMessage            json.RawMessage               `json:"RawMessage"`
+	Status                storage.Status                `json:"Status"`
+	IsReal                bool                          `json:"IsReal"`
+}
+
+func (f *MessageMapper) Marshal(msg *storage.StoredMessage) ([]byte, error) {
+	// Use a local variable to avoid heap allocation
+	var temp messageTemp
+
+	if msg.Message != nil && msg.Message.Message != nil {
 		var err error
 		temp.Message, err = protojson.Marshal(msg.Message.Message)
 		if err != nil {
@@ -96,25 +101,8 @@ func (f *MessageMapper) Marshal(msg *storage.StoredMessage) ([]byte, error) {
 }
 
 func (f *MessageMapper) Unmarshal(data []byte, msg *storage.StoredMessage) error {
-	// Temporary structure to hold JSON data
-	var temp struct {
-		Info                  types.MessageInfo             `json:"Info"`
-		Message               json.RawMessage               `json:"Message"`
-		IsEphemeral           bool                          `json:"IsEphemeral"`
-		IsViewOnce            bool                          `json:"IsViewOnce"`
-		IsViewOnceV2          bool                          `json:"IsViewOnceV2"`
-		IsViewOnceV2Extension bool                          `json:"IsViewOnceV2Extension"`
-		IsDocumentWithCaption bool                          `json:"IsDocumentWithCaption"`
-		IsLottieSticker       bool                          `json:"IsLottieSticker"`
-		IsEdit                bool                          `json:"IsEdit"`
-		SourceWebMsg          json.RawMessage               `json:"SourceWebMsg"`
-		UnavailableRequestID  string                        `json:"UnavailableRequestID"`
-		RetryCount            int                           `json:"RetryCount"`
-		NewsletterMeta        *events.NewsletterMessageMeta `json:"NewsletterMeta"`
-		RawMessage            json.RawMessage               `json:"RawMessage"`
-		Status                storage.Status                `json:"Status"`
-		IsReal                bool                          `json:"IsReal"`
-	}
+	// Use the messageTemp struct to reduce allocations
+	var temp messageTemp
 
 	// Unmarshal into the temporary structure
 	temp.IsReal = true
@@ -122,7 +110,11 @@ func (f *MessageMapper) Unmarshal(data []byte, msg *storage.StoredMessage) error
 		return err
 	}
 
-	msg.Message = &events.Message{}
+	// Initialize Message only if needed
+	if msg.Message == nil {
+		msg.Message = &events.Message{}
+	}
+
 	// Assign values to msg
 	msg.Info = temp.Info
 	msg.IsEphemeral = temp.IsEphemeral
@@ -135,12 +127,22 @@ func (f *MessageMapper) Unmarshal(data []byte, msg *storage.StoredMessage) error
 	msg.UnavailableRequestID = temp.UnavailableRequestID
 	msg.RetryCount = temp.RetryCount
 	msg.NewsletterMeta = temp.NewsletterMeta
-	msg.Status = &temp.Status
+
+	// Create a copy of the Status value to avoid storing a pointer to a local variable
+	if msg.Status == nil {
+		status := temp.Status
+		msg.Status = &status
+	} else {
+		*msg.Status = temp.Status
+	}
+
 	msg.IsReal = temp.IsReal
 
 	// Unmarshal Message if present
 	if !isNullJson(temp.Message) {
-		msg.Message.Message = &waProto.Message{}
+		if msg.Message.Message == nil {
+			msg.Message.Message = &waProto.Message{}
+		}
 		if err := protojson.Unmarshal(temp.Message, msg.Message.Message); err != nil {
 			return err
 		}
@@ -148,7 +150,9 @@ func (f *MessageMapper) Unmarshal(data []byte, msg *storage.StoredMessage) error
 
 	// Unmarshal RawMessage if present
 	if !isNullJson(temp.RawMessage) {
-		msg.RawMessage = &waProto.Message{}
+		if msg.RawMessage == nil {
+			msg.RawMessage = &waProto.Message{}
+		}
 		if err := protojson.Unmarshal(temp.RawMessage, msg.RawMessage); err != nil {
 			return err
 		}
@@ -156,7 +160,9 @@ func (f *MessageMapper) Unmarshal(data []byte, msg *storage.StoredMessage) error
 
 	// Unmarshal SourceWebMsg if present
 	if !isNullJson(temp.SourceWebMsg) {
-		msg.SourceWebMsg = &waProto.WebMessageInfo{}
+		if msg.SourceWebMsg == nil {
+			msg.SourceWebMsg = &waProto.WebMessageInfo{}
+		}
 		if err := protojson.Unmarshal(temp.SourceWebMsg, msg.SourceWebMsg); err != nil {
 			return err
 		}
