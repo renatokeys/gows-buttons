@@ -20,6 +20,8 @@ func isNullJson(data []byte) bool {
 type MessageMapper struct {
 }
 
+var messageMapper = &MessageMapper{}
+
 var _ Mapper[storage.StoredMessage] = (*MessageMapper)(nil)
 
 func (f *MessageMapper) ToFields(entity *storage.StoredMessage) map[string]interface{} {

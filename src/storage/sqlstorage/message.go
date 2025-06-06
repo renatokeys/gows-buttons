@@ -20,7 +20,7 @@ func (gc *GContainer) NewMessageStorage() *SqlMessageStore {
 	repo := NewEntityRepository[storage.StoredMessage](
 		gc.db,
 		MessageTable,
-		&MessageMapper{},
+		messageMapper,
 	)
 	return &SqlMessageStore{
 		repo,

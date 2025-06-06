@@ -16,7 +16,7 @@ func (gc *GContainer) NewLabelAssociationStorage() *SqlLabelAssociationStore {
 	repo := NewEntityRepository[storage.LabelAssociation](
 		gc.db,
 		LabelAssociationsTable,
-		&LabelAssociationMapper{},
+		labelAssociationMapper,
 	)
 	return &SqlLabelAssociationStore{
 		repo,

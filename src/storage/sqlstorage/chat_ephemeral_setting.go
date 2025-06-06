@@ -11,7 +11,7 @@ func (gc *GContainer) NewChatEphemeralSettingStorage() *SqlChatEphemeralSettingS
 	repo := NewEntityRepository[storage.StoredChatEphemeralSetting](
 		gc.db,
 		ChatEphemeralSettingsTable,
-		&ChatEphemeralSettingMapper{},
+		chatEphemeralSettingMapper,
 	)
 	return &SqlChatEphemeralSettingStore{
 		repo,

@@ -9,6 +9,7 @@ type ChatEphemeralSettingMapper struct {
 }
 
 var _ Mapper[storage.StoredChatEphemeralSetting] = (*ChatEphemeralSettingMapper)(nil)
+var chatEphemeralSettingMapper = &ChatEphemeralSettingMapper{}
 
 func (f *ChatEphemeralSettingMapper) ToFields(entity *storage.StoredChatEphemeralSetting) map[string]interface{} {
 	return map[string]interface{}{

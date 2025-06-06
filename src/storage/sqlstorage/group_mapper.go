@@ -9,6 +9,7 @@ type GroupMapper struct {
 }
 
 var _ Mapper[types.GroupInfo] = (*GroupMapper)(nil)
+var groupMapper = &GroupMapper{}
 
 func (f *GroupMapper) ToFields(entity *types.GroupInfo) map[string]interface{} {
 	return map[string]interface{}{

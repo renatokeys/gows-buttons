@@ -9,6 +9,7 @@ type LabelAssociationMapper struct {
 }
 
 var _ Mapper[storage.LabelAssociation] = (*LabelAssociationMapper)(nil)
+var labelAssociationMapper = &LabelAssociationMapper{}
 
 func (f *LabelAssociationMapper) ToFields(entity *storage.LabelAssociation) map[string]interface{} {
 	return map[string]interface{}{

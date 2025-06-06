@@ -15,7 +15,7 @@ func (gc *GContainer) NewLabelStorage() *SqlLabelStore {
 	repo := NewEntityRepository[storage.Label](
 		gc.db,
 		LabelsTable,
-		&LabelMapper{},
+		labelMapper,
 	)
 	return &SqlLabelStore{
 		repo,

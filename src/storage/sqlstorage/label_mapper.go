@@ -9,6 +9,7 @@ type LabelMapper struct {
 }
 
 var _ Mapper[storage.Label] = (*LabelMapper)(nil)
+var labelMapper = &LabelMapper{}
 
 func (f *LabelMapper) ToFields(entity *storage.Label) map[string]interface{} {
 	return map[string]interface{}{

@@ -12,7 +12,7 @@ func (gc *GContainer) NewGroupStorage() *SqlGroupStore {
 	repo := NewEntityRepository[types.GroupInfo](
 		gc.db,
 		GroupTable,
-		&GroupMapper{},
+		groupMapper,
 	)
 	return &SqlGroupStore{
 		repo,
