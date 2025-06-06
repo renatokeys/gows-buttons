@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"github.com/samber/lo"
 	"go.mau.fi/util/random"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types/events"
+	"google.golang.org/protobuf/proto"
 )
 
 // BuildPollCreationV3 builds a poll creation message (v3) with the given poll name, options and maximum number of selections.

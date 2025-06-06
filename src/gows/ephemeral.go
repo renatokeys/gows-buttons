@@ -3,11 +3,11 @@ package gows
 import (
 	"errors"
 	"github.com/devlikeapro/gows/storage"
-	"github.com/golang/protobuf/proto"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/proto/waHistorySync"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
+	"google.golang.org/protobuf/proto"
 )
 
 func (gows *GoWS) PopulateContextInfoDisappearingSettings(info *waE2E.ContextInfo, jid types.JID) (*waE2E.ContextInfo, error) {

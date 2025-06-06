@@ -10,11 +10,11 @@ import (
 
 	"github.com/devlikeapro/gows/media"
 	__ "github.com/devlikeapro/gows/proto"
-	"github.com/golang/protobuf/proto"
 	"go.mau.fi/util/random"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *Server) GenerateNewMessageID(ctx context.Context, req *__.Session) (*__.NewMessageIDResponse, error) {

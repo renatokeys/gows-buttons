@@ -1,11 +1,11 @@
 package gows
 
 import (
-	"github.com/golang/protobuf/proto"
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
+	"google.golang.org/protobuf/proto"
 	"time"
 )
 
