@@ -64,12 +64,14 @@ var (
 	socket    string
 	pprofFlag bool
 	pprofPort int
+	pprofHost string
 )
 
 func init() {
 	flag.StringVar(&socket, "socket", "/tmp/gows.sock", "Socket path")
 	flag.BoolVar(&pprofFlag, "pprof", false, "Enable pprof HTTP server")
 	flag.IntVar(&pprofPort, "pprof-port", 6060, "Port for pprof HTTP server")
+	flag.StringVar(&pprofHost, "pprof-host", "localhost", "Host for pprof HTTP server")
 }
 
 func startPprofServer(log waLog.Logger) {
@@ -77,7 +79,7 @@ func startPprofServer(log waLog.Logger) {
 		return
 	}
 
-	addr := fmt.Sprintf("localhost:%d", pprofPort)
+	addr := fmt.Sprintf("%s:%d", pprofHost, pprofPort)
 	log.Infof("Starting pprof HTTP server on %s", addr)
 
 	go func() {
