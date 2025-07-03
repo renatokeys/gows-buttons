@@ -21,7 +21,7 @@ func ExtractUrlFromText(text string) string {
 
 func MakeSureURL(text string) string {
 	var url string
-	if !strings.HasPrefix(text, "http") || !strings.HasPrefix(text, "https") {
+	if !strings.HasPrefix(text, "http") && !strings.HasPrefix(text, "https") {
 		url = "https://" + text
 	} else {
 		url = text
