@@ -48,7 +48,7 @@ func (s *Server) StartSession(ctx context.Context, req *__.StartSessionRequest) 
 	}
 
 	session := req.GetId()
-	cli, err := s.Sm.Start(session, cfg)
+	cli, err := s.Sm.Build(session, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +59,11 @@ func (s *Server) StartSession(ctx context.Context, req *__.StartSessionRequest) 
 			s.SendEventToAllListeners(session, evt)
 		}
 	}()
+
+	err = s.Sm.Start(session)
+	if err != nil {
+		return nil, err
+	}
 
 	return &__.Empty{}, nil
 }

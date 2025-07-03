@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	gowsLog "github.com/devlikeapro/gows/log"
-	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/binary/proto"
 	"go.mau.fi/whatsmeow/store"
 	waLog "go.mau.fi/whatsmeow/util/log"
@@ -53,23 +52,22 @@ func NewSessionManager() *SessionManager {
 	}
 }
 
-func (sm *SessionManager) Start(name string, cfg SessionConfig) (*GoWS, error) {
+func (sm *SessionManager) Build(name string, cfg SessionConfig) (*GoWS, error) {
 	sm.sessionsLock.Lock()
 	defer sm.sessionsLock.Unlock()
-	gows, err := sm.unlockedStart(name, cfg)
+	gows, err := sm.unlockedBuild(name, cfg)
 	if err != nil {
-		sm.log.Errorf("Error starting session '%s': %v", name, err)
-		sm.unlockedStop(name)
+		sm.log.Errorf("Error building session '%s': %v", name, err)
 		return nil, err
 	}
 	return gows, nil
 }
 
-func (sm *SessionManager) unlockedStart(name string, cfg SessionConfig) (*GoWS, error) {
-	sm.log.Infof("Starting session '%s'...", name)
+func (sm *SessionManager) unlockedBuild(name string, cfg SessionConfig) (*GoWS, error) {
 	if goWS, ok := sm.sessions[name]; ok {
 		return goWS, nil
 	}
+	sm.log.Debugf("Building session '%s'...", name)
 
 	ctx := context.WithValue(context.Background(), "name", name)
 	log := gowsLog.Stdout("Session", cfg.Log.Level, false)
@@ -86,12 +84,33 @@ func (sm *SessionManager) unlockedStart(name string, cfg SessionConfig) (*GoWS, 
 	if err != nil {
 		return nil, err
 	}
-	err = gows.Start()
-	if err != nil && !errors.Is(err, whatsmeow.ErrAlreadyConnected) {
-		return nil, err
-	}
-	sm.log.Infof("Session started '%s'", name)
+	sm.log.Infof("Session has been built '%s'", name)
 	return gows, nil
+}
+
+func (sm *SessionManager) Start(name string) error {
+	sm.sessionsLock.Lock()
+	defer sm.sessionsLock.Unlock()
+	err := sm.unlockedStart(name)
+	if err != nil {
+		sm.log.Errorf("Error starting session '%s': %v", name, err)
+		return err
+	}
+	return nil
+}
+
+func (sm *SessionManager) unlockedStart(name string) error {
+	sm.log.Infof("Starting session '%s'...", name)
+	if goWS, ok := sm.sessions[name]; !ok {
+		return ErrSessionNotFound
+	} else {
+		err := goWS.Start()
+		if err != nil {
+			return err
+		}
+		sm.log.Infof("Session started '%s'", name)
+		return nil
+	}
 }
 
 func (sm *SessionManager) Get(name string) (*GoWS, error) {
