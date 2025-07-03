@@ -23,7 +23,7 @@ require (
 require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/samber/lo v1.49.1
-	go.mau.fi/util v0.8.7
+	go.mau.fi/util v0.8.8
 )
 
 require (
@@ -48,7 +48,7 @@ require (
 	go.mau.fi/libsignal v0.2.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/crypto v0.39.0 // indirect
-	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
+	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476 // indirect
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
@@ -56,4 +56,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250609050617-f8fcd68c2ebe
+replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250703094035-95b2cdccae24
