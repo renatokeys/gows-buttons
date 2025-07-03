@@ -554,6 +554,8 @@ message NewsletterToggleFollowRequest {
 message DownloadMediaRequest {
   Session session = 1;
   string message = 2; // JSON string
+  string jid = 3;
+  string messageId = 4;
 }
 
 message DownloadMediaResponse {
