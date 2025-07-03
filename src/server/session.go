@@ -60,10 +60,10 @@ func (s *Server) StartSession(ctx context.Context, req *__.StartSessionRequest) 
 		}
 	}()
 
-	err = s.Sm.Start(session)
-	if err != nil {
-		return nil, err
-	}
+	// Start the session in the background
+	go func() {
+		err = s.Sm.Start(session)
+	}()
 
 	return &__.Empty{}, nil
 }
