@@ -148,6 +148,12 @@ service MessageService {
   rpc GetChatsByLabelId(EntityByIdRequest) returns (JsonList);
 
   //
+  // Contacts
+  //
+  rpc GetContacts(GetContactsRequest) returns (JsonList);
+  rpc GetContactById(EntityByIdRequest) returns (Json);
+
+  //
   // Events
   //
   rpc CancelEventMessage(CancelEventMessageRequest) returns (MessageResponse);
@@ -163,8 +169,6 @@ service MessageService {
   rpc GetMessageById(EntityByIdRequest) returns (Json);
   rpc GetMessages(GetMessagesRequest) returns (JsonList);
 
-  rpc GetContacts(GetContactsRequest) returns (JsonList);
-  rpc GetContactById(EntityByIdRequest) returns (Json);
 
   rpc GetChats(GetChatsRequest) returns (JsonList);
 
@@ -612,7 +616,7 @@ message GetMessagesRequest {
 }
 
 //
-// Storage - Contacts
+// Contacts
 //
 
 message GetContactsRequest {

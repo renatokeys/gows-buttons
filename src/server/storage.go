@@ -72,45 +72,6 @@ func parseMessageFilters(reqFilters *__.MessageFilters) (*storage.MessageFilter,
 	return &filters, nil
 }
 
-func (s *Server) GetContactById(ctx context.Context, req *__.EntityByIdRequest) (*__.Json, error) {
-	cli, err := s.Sm.Get(req.GetSession().GetId())
-	if err != nil {
-		return nil, err
-	}
-	user, err := types.ParseJID(req.Id)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing jid %v: %w", req.Id, err)
-	}
-
-	contact, err := cli.Storage.Contacts.GetContact(user)
-	if err != nil {
-		return nil, fmt.Errorf("error getting contact %v: %w", user, err)
-	}
-	response, err := toJson(contact)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling contact %v: %w", user, err)
-	}
-	return response, nil
-}
-
-func (s *Server) GetContacts(ctx context.Context, req *__.GetContactsRequest) (*__.JsonList, error) {
-	cli, err := s.Sm.Get(req.GetSession().GetId())
-	if err != nil {
-		return nil, err
-	}
-	pagination := toPagination(req.Pagination)
-	sort := toStorageSort(req.SortBy)
-	contacts, err := cli.Storage.Contacts.GetAllContacts(sort, pagination)
-	if err != nil {
-		return nil, err
-	}
-	response, err := toJsonList(contacts)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling contacts: %w", err)
-	}
-	return response, nil
-}
-
 func toPagination(pagination *__.Pagination) storage.Pagination {
 	return storage.Pagination{
 		Limit:  pagination.Limit,
