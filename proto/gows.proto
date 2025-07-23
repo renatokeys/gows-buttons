@@ -150,6 +150,7 @@ service MessageService {
   //
   // Contacts
   //
+  rpc UpdateContact(UpdateContactRequest) returns (Empty);
   rpc GetContacts(GetContactsRequest) returns (JsonList);
   rpc GetContactById(EntityByIdRequest) returns (Json);
 
@@ -618,6 +619,13 @@ message GetMessagesRequest {
 //
 // Contacts
 //
+
+message UpdateContactRequest {
+  Session session = 1;
+  string jid = 2;
+  string firstName = 3;
+  string lastName = 4;
+}
 
 message GetContactsRequest {
   Session session = 1;

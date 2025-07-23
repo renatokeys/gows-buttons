@@ -7,6 +7,22 @@ import (
 	"go.mau.fi/whatsmeow/types"
 )
 
+func (s *Server) UpdateContact(ctx context.Context, req *__.UpdateContactRequest) (*__.Empty, error) {
+	cli, err := s.Sm.Get(req.Session.Id)
+	if err != nil {
+		return nil, err
+	}
+	jid, err := types.ParseJID(req.Jid)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing jid: %w", err)
+	}
+	err = cli.UpdateContact(ctx, jid, req.FirstName, req.LastName)
+	if err != nil {
+		return nil, err
+	}
+	return &__.Empty{}, nil
+}
+
 func (s *Server) GetContactById(ctx context.Context, req *__.EntityByIdRequest) (*__.Json, error) {
 	cli, err := s.Sm.Get(req.GetSession().GetId())
 	if err != nil {

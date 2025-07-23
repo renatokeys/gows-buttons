@@ -1,8 +1,10 @@
 package gows
 
 import (
+	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/proto/waCommon"
 	"go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/proto/waSyncAction"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
@@ -155,4 +157,26 @@ func BuildContactsMessage(contacts []Contact, contextInfo *waE2E.ContextInfo) (m
 	}
 	message.ContactsArrayMessage.ContextInfo = contextInfo
 	return message
+}
+
+func BuildContactUpdate(jid types.JID, firstName, lastName string) appstate.PatchInfo {
+	fullName := firstName
+	if lastName != "" {
+		fullName = firstName + " " + lastName
+	}
+
+	return appstate.PatchInfo{
+		Type: appstate.WAPatchCriticalUnblockLow,
+		Mutations: []appstate.MutationInfo{{
+			Index:   []string{appstate.IndexContact, jid.String()},
+			Version: 2,
+			Value: &waSyncAction.SyncActionValue{
+				ContactAction: &waSyncAction.ContactAction{
+					FullName:                 proto.String(fullName),
+					FirstName:                proto.String(firstName),
+					SaveOnPrimaryAddressbook: proto.Bool(true),
+				},
+			},
+		}},
+	}
 }
