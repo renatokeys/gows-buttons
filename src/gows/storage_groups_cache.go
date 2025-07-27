@@ -38,10 +38,14 @@ func (g *GroupCacheStorage) shouldRefresh() bool {
 	return time.Since(g.lastTimeRefreshed) > refreshInterval
 }
 
-func (g *GroupCacheStorage) FetchGroups(bool) error {
-	g.lock.Lock()
-	defer g.lock.Unlock()
-	return g.fetchGroupsUnlocked()
+func (g *GroupCacheStorage) FetchGroups(force bool) error {
+	if force {
+		g.lock.Lock()
+		defer g.lock.Unlock()
+		return g.fetchGroupsUnlocked()
+	}
+	_, err := g.fetchGroupsIfNeeded(true)
+	return err
 }
 
 func (g *GroupCacheStorage) UpdateGroup(update *events.GroupInfo) (err error) {
