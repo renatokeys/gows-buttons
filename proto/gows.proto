@@ -359,6 +359,28 @@ message MessageRequest {
 
   // Poll message
   PollMessage poll = 15;
+
+  // List message
+  ListMessage list = 16;
+}
+
+message Row {
+  string title = 1;
+  optional string description = 2;
+  string rowId = 3;
+}
+
+message Section {
+  string title = 1;
+  repeated Row rows = 2;
+}
+
+message ListMessage {
+  string title = 1;
+  optional string description = 2;
+  optional string footer = 3;
+  string button = 4;
+  repeated Section sections = 5;
 }
 
 message MessageReaction {

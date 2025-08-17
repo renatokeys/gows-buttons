@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devlikeapro/gows/gows"
+	waBinary "go.mau.fi/whatsmeow/binary"
 	"strconv"
 	"time"
 
@@ -122,6 +123,53 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 			})
 		}
 		message = gows.BuildContactsMessage(contacts, contextInfo)
+	} else if req.List != nil {
+		// List Message
+		listMsg := &waE2E.ListMessage{
+			Title:       proto.String(req.List.Title),
+			ButtonText:  proto.String(req.List.Button),
+			Description: req.List.Description,
+			FooterText:  req.List.Footer,
+			ListType:    waE2E.ListMessage_SINGLE_SELECT.Enum(),
+			Sections:    make([]*waE2E.ListMessage_Section, 0, len(req.List.Sections)),
+		}
+
+		// Convert sections
+		for _, section := range req.List.Sections {
+			waSection := &waE2E.ListMessage_Section{
+				Title: proto.String(section.Title),
+				Rows:  make([]*waE2E.ListMessage_Row, 0, len(section.Rows)),
+			}
+
+			// Convert rows
+			for _, row := range section.Rows {
+				waRow := &waE2E.ListMessage_Row{
+					Title:       proto.String(row.Title),
+					RowID:       proto.String(row.RowId),
+					Description: row.Description,
+				}
+				waSection.Rows = append(waSection.Rows, waRow)
+			}
+
+			listMsg.Sections = append(listMsg.Sections, waSection)
+		}
+
+		listMsg.ContextInfo = contextInfo
+		message = &waE2E.Message{
+			ListMessage: listMsg,
+		}
+		node := waBinary.Node{
+			Tag: "biz",
+			Content: []waBinary.Node{{
+				Tag: "list",
+				Attrs: waBinary.Attrs{
+					"v":    "2",
+					"type": "product_list",
+				},
+			}},
+		}
+		extra.AdditionalNodes = &[]waBinary.Node{node}
+
 	} else if req.Media == nil {
 		// Text Message
 		message = cli.BuildTextMessage(req.Text)
