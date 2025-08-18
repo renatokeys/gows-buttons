@@ -1,6 +1,7 @@
 package gows
 
 import (
+	"errors"
 	"runtime/debug"
 	"time"
 
@@ -187,8 +188,12 @@ func (st *StorageEventHandler) handleReceipt(event *events.Receipt) {
 	for _, id := range event.MessageIDs {
 		st.log.Debugf("Updating status for message %v(%v) to %v (receipt type: '%v')", event.Chat, id, status, event.Type.GoString())
 		msg, err := st.storage.Messages.GetMessage(id)
+		if errors.Is(err, storage.ErrNotFound) {
+			st.log.Debugf("Message %v(%v) not found", event.Chat, id)
+			continue
+		}
 		if err != nil {
-			st.log.Debugf("Error getting message %v(%v): %v", event.Chat, id, err)
+			st.log.Errorf("Error getting message %v(%v): %v", event.Chat, id, err)
 			continue
 		}
 		if msg.Status != nil && *msg.Status >= status {
