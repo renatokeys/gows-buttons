@@ -175,7 +175,13 @@ func (s *Server) SetGroupDescription(ctx context.Context, req *__.JidStringReque
 	if err != nil {
 		return nil, err
 	}
-	err = cli.SetGroupDescription(jid, req.GetValue())
+	prevTopicId := ""
+	group, err := cli.GetGroupInfo(jid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get group info: %w", err)
+	}
+	prevTopicId = group.TopicID
+	err = cli.SetGroupDescription(jid, req.GetValue(), prevTopicId)
 	if err != nil {
 		return nil, err
 	}
