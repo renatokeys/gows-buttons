@@ -1,6 +1,7 @@
 package sqlstorage
 
 import (
+	"errors"
 	"time"
 
 	"github.com/devlikeapro/gows/storage"
@@ -39,6 +40,10 @@ func (s *SqlChatEphemeralSettingStore) UpdateChatEphemeralSetting(setting *stora
 func (s *SqlChatEphemeralSettingStore) DeleteChatEphemeralSetting(id types.JID, deleteBefore time.Time) error {
 	// First get the current setting to check its timestamp
 	setting, err := s.GetChatEphemeralSetting(id)
+	if errors.Is(err, storage.ErrNotFound) {
+		// Totally fine, already got removed
+		return nil
+	}
 	if err != nil {
 		return err
 	}
