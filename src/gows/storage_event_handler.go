@@ -188,7 +188,7 @@ func (st *StorageEventHandler) handleReceipt(event *events.Receipt) {
 		st.log.Debugf("Updating status for message %v(%v) to %v (receipt type: '%v')", event.Chat, id, status, event.Type.GoString())
 		msg, err := st.storage.Messages.GetMessage(id)
 		if err != nil {
-			st.log.Errorf("Error getting message %v(%v): %v", event.Chat, id, err)
+			st.log.Debugf("Error getting message %v(%v): %v", event.Chat, id, err)
 			continue
 		}
 		if msg.Status != nil && *msg.Status >= status {

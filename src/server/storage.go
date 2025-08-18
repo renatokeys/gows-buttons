@@ -17,7 +17,7 @@ func (s *Server) GetMessageById(ctx context.Context, req *__.EntityByIdRequest) 
 	id := req.Id
 	msg, err := cli.Storage.Messages.GetMessage(id)
 	if err != nil {
-		return nil, fmt.Errorf("error getting message %v: %w", id, err)
+		return nil, fmt.Errorf("error getting message by id %v: %w", id, err)
 	}
 	response, err := toJson(msg)
 	if err != nil {

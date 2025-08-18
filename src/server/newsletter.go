@@ -151,7 +151,7 @@ func (s *Server) GetNewsletterMessagesByInvite(ctx context.Context, req *__.GetN
 	}
 	newsletterMessages, err := cli.GetNewsletterMessagesByInvite(code, params)
 	if err != nil {
-		return nil, fmt.Errorf("error getting messages: %w", err)
+		return nil, fmt.Errorf("error getting newsletter messages: %w", err)
 	}
 	response, err := toJson(newsletterMessages)
 	if err != nil {
