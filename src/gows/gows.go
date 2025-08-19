@@ -35,6 +35,7 @@ func (gows *GoWS) reissueEvent(event interface{}) {
 		// Populate the ConnectedEventData with the ID and PushName
 		data = &ConnectedEventData{
 			ID:       gows.Store.ID,
+			LID:      &gows.Store.LID,
 			PushName: gows.Store.PushName,
 		}
 

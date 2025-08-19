@@ -8,6 +8,7 @@ import (
 
 type ConnectedEventData struct {
 	ID       *types.JID
+	LID      *types.JID
 	PushName string
 }
 
