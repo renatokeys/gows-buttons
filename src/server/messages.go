@@ -173,6 +173,18 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		}
 		extra.AdditionalNodes = &[]waBinary.Node{node}
 
+	} else if req.Location != nil {
+		// Location Message
+		locationMessage := &waE2E.LocationMessage{
+			Name:             req.Location.Name,
+			DegreesLatitude:  proto.Float64(req.Location.DegreesLatitude),
+			DegreesLongitude: proto.Float64(req.Location.DegreesLongitude),
+			ContextInfo:      contextInfo,
+		}
+
+		message = &waE2E.Message{
+			LocationMessage: locationMessage,
+		}
 	} else if req.Media == nil {
 		// Text Message
 		message = cli.BuildTextMessage(req.Text)

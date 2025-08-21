@@ -322,6 +322,12 @@ message EventLocation {
   optional double degreesLatitude = 3;
 }
 
+message Location {
+  optional string name = 1;
+  double degreesLongitude = 2;
+  double degreesLatitude = 3;
+}
+
 message EventMessage {
   string name = 1;
   optional string description = 2;
@@ -362,6 +368,9 @@ message MessageRequest {
 
   // List message
   ListMessage list = 16;
+
+  // Location message
+  Location location = 17;
 }
 
 message Row {
