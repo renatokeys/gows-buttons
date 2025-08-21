@@ -94,6 +94,9 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		if message.PollCreationMessage != nil {
 			message.PollCreationMessage.ContextInfo = contextInfo
 		}
+		if jid.Server == types.NewsletterServer {
+			message.MessageContextInfo = nil
+		}
 	} else if req.Event != nil {
 		var location *gows.EventLocation
 		if req.Event.Location != nil {

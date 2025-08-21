@@ -56,4 +56,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250818121014-ad8f8ee8d7f5 // fork-main-v1025985905
+replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20250821103042-b5c2ca75034a // fork-main-v1025985905
