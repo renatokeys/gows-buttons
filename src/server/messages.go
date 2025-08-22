@@ -51,9 +51,17 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 
 	var contextInfo *waE2E.ContextInfo
 
-	contextInfo, err = cli.PopulateContextInfoDisappearingSettings(contextInfo, jid)
-	if err != nil {
-		cli.Log.Warnf("Failed to get disappearing settings: %v", err)
+	requireDisappearingSettings := true
+	switch {
+	case req.GetPollVote() != nil:
+		requireDisappearingSettings = false
+	}
+
+	if requireDisappearingSettings {
+		contextInfo, err = cli.PopulateContextInfoDisappearingSettings(contextInfo, jid)
+		if err != nil {
+			cli.Log.Warnf("Failed to get disappearing settings: %v", err)
+		}
 	}
 
 	if req.ReplyTo != "" {
@@ -78,7 +86,62 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		extra.ID = req.Id
 	}
 
-	if req.GetPoll() != nil {
+	if req.GetPollVote() != nil {
+		vote := req.PollVote
+		if vote.Options == nil {
+			vote.Options = []string{}
+		}
+		if jid.Server == types.NewsletterServer {
+			var serverId int
+			if vote.PollServerId == nil {
+				stored, err := cli.Storage.Messages.GetMessage(vote.PollMessageId)
+				if err != nil {
+					return nil, fmt.Errorf("failed to get poll creation message %s in %s: %w", vote.PollMessageId, jid, err)
+				}
+				if stored == nil {
+					return nil, fmt.Errorf("message not found: '%s' for '%s'", vote.PollMessageId, jid)
+				}
+				serverId = stored.Info.ServerID
+				if serverId == 0 {
+					return nil, fmt.Errorf("server id not found for message: '%s' for '%s', provide PollServerId field explicitly", vote.PollMessageId, jid)
+				}
+				err = gows.CheckVotesInOptions(stored.Message.Message, vote.Options)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				serverId = int(*vote.PollServerId)
+			}
+			resp, err := cli.SendNewsletterPollVote(ctx, jid, vote.PollMessageId, serverId, vote.Options)
+			if err != nil {
+				return nil, fmt.Errorf("failed to send poll vote in newsletter: %w", err)
+			}
+			msg := __.MessageResponse{
+				Id:        resp.ID,
+				Timestamp: resp.Timestamp.Unix(),
+			}
+			return &msg, nil
+		} else {
+			stored, err := cli.Storage.Messages.GetMessage(vote.PollMessageId)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get poll creation message %s in %s: %w", vote.PollMessageId, jid, err)
+			}
+			if stored == nil {
+				return nil, fmt.Errorf("message not found: '%s' for '%s'", vote.PollMessageId, jid)
+			}
+
+			err = gows.CheckVotesInOptions(stored.Message.Message, vote.Options)
+			if err != nil {
+				return nil, err
+			}
+
+			// Build poll vote
+			message, err = cli.BuildPollVote(ctx, &stored.Info, vote.Options)
+			if err != nil {
+				return nil, fmt.Errorf("failed to build poll vote message: %w", err)
+			}
+		}
+	} else if req.GetPoll() != nil {
 		poll := req.Poll
 		selectableOptionCount := 0
 		switch poll.MultipleAnswers {

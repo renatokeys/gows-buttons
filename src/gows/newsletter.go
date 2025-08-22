@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"go.mau.fi/whatsmeow"
 	waBinary "go.mau.fi/whatsmeow/binary"
+	"go.mau.fi/whatsmeow/proto/waCommon"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
+	"google.golang.org/protobuf/proto"
 	"strings"
 )
 
@@ -191,4 +195,131 @@ func (gows *GoWS) SearchNewsletterByText(query SearchNewsletterByTextParams) (*S
 		Newsletters: respData.Data.Newsletters,
 	}
 	return &result, nil
+}
+
+func (gows *GoWS) SendNewsletterPollVote(
+	ctx context.Context,
+	jid types.JID,
+	messageId types.MessageID,
+	serverID types.MessageServerID,
+	selectedOptions []string,
+) (resp whatsmeow.SendResponse, err error) {
+	resp, err = gows.SendNewsletterPollVoteNode(ctx, jid, serverID, selectedOptions)
+	if err != nil {
+		return resp, err
+	}
+
+	// Issue event
+	info := types.MessageInfo{
+		MessageSource: types.MessageSource{
+			Chat:     jid,
+			Sender:   gows.GetOwnId(),
+			IsFromMe: true,
+			IsGroup:  false,
+		},
+		ID:        resp.ID,
+		Timestamp: resp.Timestamp,
+		ServerID:  resp.ServerID,
+	}
+	msg := waE2E.Message{
+		PollUpdateMessage: &waE2E.PollUpdateMessage{
+			PollCreationMessageKey: &waCommon.MessageKey{
+				RemoteJID: proto.String(jid.String()),
+				FromMe:    proto.Bool(false),
+				ID:        proto.String(messageId),
+			},
+			SenderTimestampMS: proto.Int64(resp.Timestamp.UnixMilli()),
+		},
+	}
+	msgEvent := &events.Message{
+		Info:       info,
+		Message:    &msg,
+		RawMessage: &msg,
+	}
+	evt := PollVoteEvent{
+		Message: msgEvent,
+		Votes:   &selectedOptions,
+	}
+	go gows.handleEvent(evt)
+	return resp, nil
+}
+
+func (gows *GoWS) SendNewsletterPollVoteNode(
+	ctx context.Context,
+	jid types.JID,
+	serverID types.MessageServerID,
+	selectedOptions []string,
+) (resp whatsmeow.SendResponse, err error) {
+	if gows == nil {
+		return resp, whatsmeow.ErrClientIsNil
+	}
+	votes := make([]waBinary.Node, len(selectedOptions))
+	hashed := whatsmeow.HashPollOptions(selectedOptions)
+	for i, voteHash := range hashed {
+		votes[i] = waBinary.Node{
+			Tag:     "vote",
+			Content: voteHash,
+		}
+	}
+	votesNode := waBinary.Node{
+		Tag:     "votes",
+		Content: votes,
+	}
+	metaNode := waBinary.Node{
+		Tag: "meta",
+		Attrs: waBinary.Attrs{
+			"polltype": "vote",
+		},
+	}
+	var content []waBinary.Node
+	content = append(content, metaNode)
+	content = append(content, votesNode)
+
+	reqID := gows.GenerateMessageID()
+	response := gows.int.WaitResponse(reqID)
+	node := waBinary.Node{
+		Tag: "message",
+		Attrs: waBinary.Attrs{
+			"to":        jid,
+			"id":        reqID,
+			"server_id": serverID,
+			"type":      "poll",
+		},
+		Content: content,
+	}
+	data, err := gows.int.SendNodeAndGetData(node)
+	if err != nil {
+		gows.int.CancelResponse(reqID, response)
+		return resp, err
+	}
+
+	// handle response
+	var respNode *waBinary.Node
+	select {
+	case respNode = <-response:
+	case <-ctx.Done():
+		gows.int.CancelResponse(reqID, response)
+		return resp, ctx.Err()
+	}
+	if isDisconnectNode(respNode) {
+		respNode, err = gows.int.RetryFrame("message send", reqID, data, respNode, ctx, 0)
+		if err != nil {
+			return resp, err
+		}
+	}
+	ag := respNode.AttrGetter()
+	resp.ID = ag.String("id")
+	resp.ServerID = ag.OptionalInt("server_id")
+	resp.Timestamp = ag.UnixTime("t")
+	if errorCode := ag.Int("error"); errorCode != 0 {
+		err = fmt.Errorf("%w %d", whatsmeow.ErrServerReturnedError, errorCode)
+		return resp, err
+	}
+	return resp, nil
+}
+
+var xmlStreamEndNode = &waBinary.Node{Tag: "xmlstreamend"}
+
+func isDisconnectNode(node *waBinary.Node) bool {
+	return node == xmlStreamEndNode || node.Tag == "stream:error"
 }

@@ -371,6 +371,9 @@ message MessageRequest {
 
   // Location message
   Location location = 17;
+
+  // Poll vote message
+  PollVoteMessage pollVote = 18;
 }
 
 message Row {
@@ -731,4 +734,10 @@ message PollMessage {
   string name = 1;
   repeated string options = 2;
   bool multipleAnswers = 3;
+}
+
+message PollVoteMessage {
+  string pollMessageId = 1;
+  optional int64 pollServerId = 2;  // only for Channels
+  repeated string options = 3;
 }
