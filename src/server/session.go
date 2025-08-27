@@ -47,6 +47,15 @@ func (s *Server) StartSession(ctx context.Context, req *__.StartSessionRequest) 
 		},
 	}
 
+	// Set ignore config if provided
+	if req.Config.Ignore != nil {
+		cfg.Ignore = &gows.IgnoreJidsConfig{
+			Status:      req.Config.Ignore.Status,
+			Groups:      req.Config.Ignore.Groups,
+			Newsletters: req.Config.Ignore.Newsletters,
+		}
+	}
+
 	session := req.GetId()
 	cli, err := s.Sm.Build(session, cfg)
 	if err != nil {

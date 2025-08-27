@@ -14,10 +14,36 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
+// StorageEventHandler handles events from WhatsApp and stores them in the database.
+// It can be configured to ignore events from certain types of JIDs based on their server type.
 type StorageEventHandler struct {
 	gows    *GoWS
 	log     waLog.Logger
 	storage *storage.Storage
+	// ignoreJids specifies which types of JIDs should be ignored when processing events.
+	ignoreJids *IgnoreJidsConfig
+}
+
+func (st *StorageEventHandler) shouldIgnoreJID(jid types.JID) bool {
+	if jid.IsEmpty() {
+		return false
+	}
+
+	if st.ignoreJids == nil {
+		return false
+	}
+
+	// Check if the JID should be ignored based on its server type
+	switch jid.Server {
+	case types.BroadcastServer:
+		return st.ignoreJids.Status
+	case types.GroupServer:
+		return st.ignoreJids.Groups
+	case types.NewsletterServer:
+		return st.ignoreJids.Newsletters
+	default:
+		return false
+	}
 }
 
 func (st *StorageEventHandler) GetMessageForRetry(requester, to types.JID, id types.MessageID) *waE2E.Message {
@@ -88,6 +114,9 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 	switch event.(type) {
 	case *events.Message:
 		msg := event.(*events.Message)
+		if st.shouldIgnoreJID(msg.Info.Chat) {
+			return
+		}
 		var status storage.Status
 		if msg.Info.IsFromMe {
 			status = storage.StatusServerAck
@@ -97,27 +126,51 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 		st.handleSaveMessage(msg, &status)
 		st.handleMessageEvent(msg)
 	case *events.Receipt:
-		st.handleReceipt(event.(*events.Receipt))
+		receipt := event.(*events.Receipt)
+		if st.shouldIgnoreJID(receipt.Chat) {
+			return
+		}
+		st.handleReceipt(receipt)
 	case *events.HistorySync:
 		st.handleHistorySync(event.(*events.HistorySync))
 	// Groups
 	case *events.JoinedGroup:
-		st.handleMeJoinedGroup(event.(*events.JoinedGroup))
+		group := event.(*events.JoinedGroup)
+		if st.shouldIgnoreJID(group.JID) {
+			return
+		}
+		st.handleMeJoinedGroup(group)
 	case *events.GroupInfo:
-		left := st.handleMeLeftGroup(event.(*events.GroupInfo))
+		info := event.(*events.GroupInfo)
+		if st.shouldIgnoreJID(info.JID) {
+			return
+		}
+		left := st.handleMeLeftGroup(info)
 		if left {
 			return
 		}
-		st.handleGroupInfo(event.(*events.GroupInfo))
+		st.handleGroupInfo(info)
 	case *events.DeleteChat:
-		st.handleDeleteChat(event.(*events.DeleteChat))
+		deleteChat := event.(*events.DeleteChat)
+		if st.shouldIgnoreJID(deleteChat.JID) {
+			return
+		}
+		st.handleDeleteChat(deleteChat)
 	case *events.Contact:
-		st.handleContact(event.(*events.Contact))
+		contact := event.(*events.Contact)
+		if st.shouldIgnoreJID(contact.JID) {
+			return
+		}
+		st.handleContact(contact)
 	// Labels
 	case *events.LabelEdit:
 		st.handleLabelEdit(event.(*events.LabelEdit))
 	case *events.LabelAssociationChat:
-		st.handleLabelAssociationChat(event.(*events.LabelAssociationChat))
+		labelAssoc := event.(*events.LabelAssociationChat)
+		if st.shouldIgnoreJID(labelAssoc.JID) {
+			return
+		}
+		st.handleLabelAssociationChat(labelAssoc)
 	}
 }
 
@@ -216,6 +269,12 @@ func (st *StorageEventHandler) handleHistorySync(event *events.HistorySync) {
 			st.log.Errorf("Error parsing JID: %v", err)
 			continue
 		}
+
+		// Skip this conversation if the JID should be ignored
+		if st.shouldIgnoreJID(jid) {
+			continue
+		}
+
 		go st.saveHistoryForOneChat(conv, jid)
 	}
 	st.log.Debugf("Saved history for %v chats", len(event.Data.Conversations))

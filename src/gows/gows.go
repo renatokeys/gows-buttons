@@ -117,7 +117,13 @@ func (gows *GoWS) GetOwnId() types.JID {
 	return *id
 }
 
-func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address string) (*GoWS, error) {
+func BuildSession(
+	ctx context.Context,
+	log waLog.Logger,
+	dialect string,
+	address string,
+	ignoreJids *IgnoreJidsConfig,
+) (*GoWS, error) {
 	// Prepare the database
 	container, err := sqlstorage.New(dialect, address, log.Sub("Database"))
 	if err != nil {
@@ -148,9 +154,10 @@ func BuildSession(ctx context.Context, log waLog.Logger, dialect string, address
 	}
 	gows.Storage = BuildStorage(container, gows)
 	gows.storageEventHandler = &StorageEventHandler{
-		gows:    gows,
-		log:     gows.Log.Sub("Storage"),
-		storage: gows.Storage,
+		gows:       gows,
+		log:        gows.Log.Sub("Storage"),
+		storage:    gows.Storage,
+		ignoreJids: ignoreJids,
 	}
 	gows.GetMessageForRetry = gows.storageEventHandler.GetMessageForRetry
 	return gows, nil

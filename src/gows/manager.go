@@ -32,10 +32,21 @@ type ProxyConfig struct {
 	Url string
 }
 
+type IgnoreJidsConfig struct {
+	// Status indicates whether to ignore JIDs with server type DefaultUserServer (s.whatsapp.net)
+	Status bool
+	// Groups indicate whether to ignore JIDs with server type GroupServer (g.us)
+	Groups bool
+	// Newsletters indicate whether to ignore JIDs with server type NewsletterServer (newsletter)
+	Newsletters bool
+}
+
+// SessionConfig contains configuration for a WhatsApp session.
 type SessionConfig struct {
-	Store StoreConfig
-	Log   LogConfig
-	Proxy ProxyConfig
+	Store  StoreConfig
+	Log    LogConfig
+	Proxy  ProxyConfig
+	Ignore *IgnoreJidsConfig
 }
 
 func init() {
@@ -74,7 +85,7 @@ func (sm *SessionManager) unlockedBuild(name string, cfg SessionConfig) (*GoWS, 
 
 	dialect := cfg.Store.Dialect
 	address := cfg.Store.Address
-	gows, err := BuildSession(ctx, log.Sub(name), dialect, address)
+	gows, err := BuildSession(ctx, log.Sub(name), dialect, address, cfg.Ignore)
 	if err != nil {
 		return nil, err
 	}

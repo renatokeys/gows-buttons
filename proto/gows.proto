@@ -213,10 +213,17 @@ message SessionProxyConfig {
   string url = 1;
 }
 
+message SessionIgnoreJidsConfig {
+  bool status = 1;
+  bool groups = 2;
+  bool newsletters = 3;
+}
+
 message SessionConfig {
   SessionStoreConfig store = 1;
   SessionLogConfig log = 2;
   SessionProxyConfig proxy = 3;
+  optional SessionIgnoreJidsConfig ignore = 4;
 }
 
 message StartSessionRequest {
