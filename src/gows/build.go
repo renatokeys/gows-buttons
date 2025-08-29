@@ -180,3 +180,42 @@ func BuildContactUpdate(jid types.JID, firstName, lastName string) appstate.Patc
 		}},
 	}
 }
+
+// BuildChatUnread builds an app state patch for marking a chat as read or unread.
+//
+// The lastMessageKeys parameter should contain the message keys to mark as read.
+// If markRead is true, the chat will be marked as read, otherwise it will be marked as unread.
+// Note: Only MessageKey is accepted; timestamps are not required.
+func BuildChatUnread(
+	jid types.JID,
+	markRead bool,
+	lastMessageKeys []*waCommon.MessageKey,
+	lastMessageTimestamp time.Time,
+) appstate.PatchInfo {
+	messageRange := &waSyncAction.SyncActionMessageRange{
+		LastMessageTimestamp: proto.Int64(lastMessageTimestamp.UnixMilli()),
+	}
+
+	if len(lastMessageKeys) > 0 {
+		// Convert keys to SyncActionMessage without timestamps, as only keys are required
+		msgs := make([]*waSyncAction.SyncActionMessage, len(lastMessageKeys))
+		for i, key := range lastMessageKeys {
+			msgs[i] = &waSyncAction.SyncActionMessage{Key: key}
+		}
+		messageRange.Messages = msgs
+	}
+
+	return appstate.PatchInfo{
+		Type: appstate.WAPatchRegularLow,
+		Mutations: []appstate.MutationInfo{{
+			Index:   []string{appstate.IndexMarkChatAsRead, jid.String()},
+			Version: 3,
+			Value: &waSyncAction.SyncActionValue{
+				MarkChatAsReadAction: &waSyncAction.MarkChatAsReadAction{
+					Read:         proto.Bool(markRead),
+					MessageRange: messageRange,
+				},
+			},
+		}},
+	}
+}
