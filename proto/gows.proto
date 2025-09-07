@@ -218,6 +218,7 @@ message SessionIgnoreJidsConfig {
   bool status = 1;
   bool groups = 2;
   bool newsletters = 3;
+  bool broadcast = 4;
 }
 
 message SessionConfig {

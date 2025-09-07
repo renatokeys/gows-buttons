@@ -53,6 +53,7 @@ func (s *Server) StartSession(ctx context.Context, req *__.StartSessionRequest) 
 			Status:      req.Config.Ignore.Status,
 			Groups:      req.Config.Ignore.Groups,
 			Newsletters: req.Config.Ignore.Newsletters,
+			Broadcast:   req.Config.Ignore.Broadcast,
 		}
 	}
 

@@ -33,12 +33,17 @@ type ProxyConfig struct {
 }
 
 type IgnoreJidsConfig struct {
-	// Status indicates whether to ignore JIDs with server type DefaultUserServer (s.whatsapp.net)
+	// Status indicates whether to ignore the special status broadcast JID (status@broadcast)
+	// Note: Only applies to the "status@broadcast" JID.
 	Status bool
 	// Groups indicate whether to ignore JIDs with server type GroupServer (g.us)
 	Groups bool
 	// Newsletters indicate whether to ignore JIDs with server type NewsletterServer (newsletter)
+	// This corresponds to WhatsApp Channels.
 	Newsletters bool
+	// Broadcast indicates whether to ignore broadcast list JIDs (types.BroadcastServer),
+	// excluding the special "status@broadcast" JID which is controlled by the Status flag above.
+	Broadcast bool
 }
 
 // SessionConfig contains configuration for a WhatsApp session.

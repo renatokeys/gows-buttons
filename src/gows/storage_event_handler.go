@@ -36,7 +36,12 @@ func (st *StorageEventHandler) shouldIgnoreJID(jid types.JID) bool {
 	// Check if the JID should be ignored based on its server type
 	switch jid.Server {
 	case types.BroadcastServer:
-		return st.ignoreJids.Status
+		// Do not filter status@broadcast when broadcast-ignore is enabled:
+		// it is controlled by the dedicated Status flag.
+		if jid.User == "status" {
+			return st.ignoreJids.Status
+		}
+		return st.ignoreJids.Broadcast
 	case types.GroupServer:
 		return st.ignoreJids.Groups
 	case types.NewsletterServer:
