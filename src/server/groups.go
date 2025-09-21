@@ -69,7 +69,7 @@ func (s *Server) CreateGroup(ctx context.Context, req *__.CreateGroupRequest) (*
 		Name:         req.Name,
 		Participants: jids,
 	}
-	group, err := cli.CreateGroup(request)
+	group, err := cli.CreateGroup(ctx, request)
 	if err != nil {
 		return nil, err
 	}

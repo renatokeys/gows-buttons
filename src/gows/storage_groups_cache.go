@@ -79,7 +79,7 @@ func (g *GroupCacheStorage) UpdateGroup(update *events.GroupInfo) (err error) {
 
 func (g *GroupCacheStorage) fetchGroupsUnlocked() error {
 	g.log.Debugf("Refreshing groups")
-	groups, err := g.gows.GetJoinedGroups()
+	groups, err := g.gows.GetJoinedGroups(g.gows.Context)
 	if err != nil {
 		return err
 	}
