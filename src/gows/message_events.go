@@ -90,11 +90,7 @@ func (gows *GoWS) handleEncEventResponse(ctx context.Context, msg *events.Messag
 		Message:       msg,
 		EventResponse: eventResponse,
 	}
-	select {
-	case <-gows.Context.Done():
-		return
-	case gows.events <- data:
-	}
+	gows.emitEvent(data)
 }
 
 func (gows *GoWS) BuildEventUpdate(

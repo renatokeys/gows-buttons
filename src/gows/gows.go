@@ -2,6 +2,8 @@ package gows
 
 import (
 	"context"
+	"runtime/debug"
+	"sync"
 	"time"
 
 	"github.com/devlikeapro/gows/storage"
@@ -23,12 +25,22 @@ type GoWS struct {
 	Storage *storage.Storage
 
 	events              chan interface{}
+	eventsMu            sync.RWMutex
+	eventsClosed        bool
 	cancelContext       context.CancelFunc
 	container           *sqlstorage.GContainer
 	storageEventHandler *StorageEventHandler
 }
 
 func (gows *GoWS) reissueEvent(event interface{}) {
+	// Handle all panic and log error + stack
+	defer func() {
+		if err := recover(); err != nil {
+			stack := debug.Stack()
+			gows.Log.Errorf("Panic happened in reissue event: %v. Stack: %s. Event: %v", err, stack, event)
+		}
+	}()
+
 	var data interface{}
 	switch event.(type) {
 	case *events.Connected:
@@ -51,12 +63,7 @@ func (gows *GoWS) reissueEvent(event interface{}) {
 		data = event
 	}
 
-	// reissue from events to client
-	select {
-	case <-gows.Context.Done():
-		return
-	case gows.events <- data:
-	}
+	gows.emitEvent(data)
 }
 
 func (gows *GoWS) handleEvent(event interface{}) {
@@ -90,7 +97,7 @@ func (gows *GoWS) listenQRCodeEvents() {
 				if qr.Event == "" {
 					return
 				}
-				gows.events <- qr
+				gows.emitEvent(qr)
 			}
 		}
 	}()
@@ -103,7 +110,12 @@ func (gows *GoWS) Stop() {
 	if err != nil {
 		gows.Log.Errorf("Error closing container: %v", err)
 	}
-	close(gows.events)
+	gows.eventsMu.Lock()
+	if !gows.eventsClosed {
+		close(gows.events)
+		gows.eventsClosed = true
+	}
+	gows.eventsMu.Unlock()
 }
 
 func (gows *GoWS) GetOwnId() types.JID {
@@ -148,6 +160,8 @@ func BuildSession(
 		ctx,
 		nil,
 		make(chan interface{}, 10),
+		sync.RWMutex{},
+		false,
 		cancel,
 		container,
 		nil,
@@ -165,6 +179,21 @@ func BuildSession(
 
 func (gows *GoWS) GetEventChannel() <-chan interface{} {
 	return gows.events
+}
+
+func (gows *GoWS) emitEvent(data interface{}) {
+	gows.eventsMu.RLock()
+	defer gows.eventsMu.RUnlock()
+
+	if gows.eventsClosed {
+		return
+	}
+
+	select {
+	case <-gows.Context.Done():
+		return
+	case gows.events <- data:
+	}
 }
 
 func (gows *GoWS) SendMessage(ctx context.Context, to types.JID, msg *waE2E.Message, extra whatsmeow.SendRequestExtra) (message *events.Message, err error) {

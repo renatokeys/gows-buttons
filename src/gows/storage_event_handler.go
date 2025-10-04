@@ -112,7 +112,7 @@ func (st *StorageEventHandler) handleEvent(event interface{}) {
 	defer func() {
 		if err := recover(); err != nil {
 			stack := debug.Stack()
-			st.log.Errorf("Panic happened when handling event: %v. Stack: %s. Event: %v", err, stack, event)
+			st.log.Errorf("Panic happened in handle event: %v. Stack: %s. Event: %v", err, stack, event)
 		}
 	}()
 

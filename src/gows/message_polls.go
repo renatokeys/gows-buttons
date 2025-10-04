@@ -102,9 +102,5 @@ func (gows *GoWS) handleEncPollVote(ctx context.Context, msg *events.Message) {
 		Message: msg,
 		Votes:   votes,
 	}
-	select {
-	case <-gows.Context.Done():
-		return
-	case gows.events <- data:
-	}
+	gows.emitEvent(data)
 }
