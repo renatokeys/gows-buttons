@@ -17,13 +17,13 @@ require (
 	github.com/u2takey/ffmpeg-go v0.5.0
 	go.mau.fi/whatsmeow v0.0.0-20250204095649-a75587ab11d7 // find "replace" for the project below with a fork project
 	google.golang.org/grpc v1.73.0
-	google.golang.org/protobuf v1.36.9
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/samber/lo v1.49.1
-	go.mau.fi/util v0.9.1
+	go.mau.fi/util v0.9.2-0.20251005111801-c13b66219cee
 )
 
 require (
@@ -48,7 +48,7 @@ require (
 	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.27 // indirect
-	go.mau.fi/libsignal v0.2.0 // indirect
+	go.mau.fi/libsignal v0.2.1-0.20251004173110-6e0a3f2435ed // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect
@@ -60,4 +60,4 @@ require (
 )
 
 // fork-main-v1027949008
-replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20251004083308-22e93f461c1a
+replace go.mau.fi/whatsmeow => github.com/devlikeapro/whatsmeow v0.0.0-20251010032300-364f49bf3444
