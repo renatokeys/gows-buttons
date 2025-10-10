@@ -3,7 +3,6 @@ package gows
 import (
 	"context"
 	"runtime/debug"
-	"sync"
 	"time"
 
 	"github.com/devlikeapro/gows/storage"
@@ -25,8 +24,6 @@ type GoWS struct {
 	Storage *storage.Storage
 
 	events              chan interface{}
-	eventsMu            sync.RWMutex
-	eventsClosed        bool
 	cancelContext       context.CancelFunc
 	container           *sqlstorage.GContainer
 	storageEventHandler *StorageEventHandler
@@ -110,12 +107,6 @@ func (gows *GoWS) Stop() {
 	if err != nil {
 		gows.Log.Errorf("Error closing container: %v", err)
 	}
-	gows.eventsMu.Lock()
-	if !gows.eventsClosed {
-		close(gows.events)
-		gows.eventsClosed = true
-	}
-	gows.eventsMu.Unlock()
 }
 
 func (gows *GoWS) GetOwnId() types.JID {
@@ -160,8 +151,6 @@ func BuildSession(
 		ctx,
 		nil,
 		make(chan interface{}, 10),
-		sync.RWMutex{},
-		false,
 		cancel,
 		container,
 		nil,
@@ -182,12 +171,13 @@ func (gows *GoWS) GetEventChannel() <-chan interface{} {
 }
 
 func (gows *GoWS) emitEvent(data interface{}) {
-	gows.eventsMu.RLock()
-	defer gows.eventsMu.RUnlock()
-
-	if gows.eventsClosed {
-		return
-	}
+	// Handle all panic and log error + stack
+	defer func() {
+		if err := recover(); err != nil {
+			stack := debug.Stack()
+			gows.Log.Errorf("Panic happened in emit event: %v. Stack: %s. Data: %v", err, stack, data)
+		}
+	}()
 
 	select {
 	case <-gows.Context.Done():
