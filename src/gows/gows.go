@@ -107,6 +107,7 @@ func (gows *GoWS) Stop() {
 	if err != nil {
 		gows.Log.Errorf("Error closing container: %v", err)
 	}
+	close(gows.events)
 }
 
 func (gows *GoWS) GetOwnId() types.JID {
