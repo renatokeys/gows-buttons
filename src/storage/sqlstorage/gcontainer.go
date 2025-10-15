@@ -51,6 +51,20 @@ func New(dialect, address string, log waLog.Logger) (*GContainer, error) {
 }
 
 func configureSqlite3(db *sqlx.DB) (err error) {
+	// CONNECTION
+	// Maybe we'll need in the future for sqlite3
+	// Error: database is locked
+	// Usually _busy_timeout=10000 is enough, but sometimes it's not
+	// https://github.com/mattn/go-sqlite3/issues/209
+	// DO NOT add cache=shared, it's not safe
+	//
+	// https://github.com/devlikeapro/waha/issues/1503
+	//
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+	db.SetConnMaxLifetime(0)
+
+	// PRAGMA
 	_, err = db.Exec("PRAGMA journal_mode=WAL;")
 	if err != nil {
 		return fmt.Errorf("failed to set WAL journal mode: %w", err)
@@ -59,14 +73,6 @@ func configureSqlite3(db *sqlx.DB) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to set synchronous mode: %w", err)
 	}
-
-	// Maybe we'll need in the future for sqlite3
-	// Error: database is locked
-	// Usually _busy_timeout=10000 is enough, but sometimes it's not
-	// https://github.com/mattn/go-sqlite3/issues/209
-	// DO NOT add cache=shared, it's not safe
-	// db.SetMaxOpenConns(1)
-
 	return nil
 }
 
