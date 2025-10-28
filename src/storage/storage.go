@@ -21,7 +21,7 @@ type Storage struct {
 type MessageStorage interface {
 	UpsertOneMessage(msg *StoredMessage) error
 	GetLastMessagesInChats(filter ChatFilter, sortBy Sort, pagination Pagination) ([]*StoredMessage, error)
-	GetAllMessages(filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
+	GetAllMessages(filters MessageFilter, sortBy Sort, pagination Pagination) ([]*StoredMessage, error)
 	GetChatMessages(jid types.JID, filters MessageFilter, pagination Pagination) ([]*StoredMessage, error)
 	GetMessage(id types.MessageID) (*StoredMessage, error)
 	DeleteChatMessages(jid types.JID, deleteBefore time.Time) error

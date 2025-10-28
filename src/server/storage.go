@@ -36,7 +36,15 @@ func (s *Server) GetMessages(ctx context.Context, req *__.GetMessagesRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	messages, err := cli.Storage.Messages.GetAllMessages(*filters, pagination)
+
+	sort := toStorageSort(req.SortBy)
+	if sort.Field == "" {
+		sort.Field = "timestamp"
+	}
+	if sort.Order == "" {
+		sort.Order = storage.SortDesc
+	}
+	messages, err := cli.Storage.Messages.GetAllMessages(*filters, sort, pagination)
 	if err != nil {
 		return nil, err
 	}

@@ -31,7 +31,7 @@ func (s SqlMessageStore) UpsertOneMessage(msg *storage.StoredMessage) (err error
 	return s.UpsertOne(msg)
 }
 
-func (s SqlMessageStore) GetAllMessages(filters storage.MessageFilter, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
+func (s SqlMessageStore) GetAllMessages(filters storage.MessageFilter, sort storage.Sort, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
 	conditions := make([]sq.Sqlizer, 0)
 	if filters.Jid != nil {
 		conditions = append(conditions, sq.Eq{"jid": filters.Jid})
@@ -57,18 +57,17 @@ func (s SqlMessageStore) GetAllMessages(filters storage.MessageFilter, paginatio
 	}
 
 	conditions = append(conditions, sq.Eq{"is_real": true})
-	sort := []storage.Sort{
-		{
-			Field: "timestamp",
-			Order: storage.SortDesc,
-		},
-	}
-	return s.FilterBy(conditions, sort, pagination)
+	sorts := []storage.Sort{sort}
+	return s.FilterBy(conditions, sorts, pagination)
 }
 
 func (s SqlMessageStore) GetChatMessages(jid types.JID, filters storage.MessageFilter, pagination storage.Pagination) ([]*storage.StoredMessage, error) {
 	filters.Jid = &jid
-	return s.GetAllMessages(filters, pagination)
+	sort := storage.Sort{
+		Field: "timestamp",
+		Order: storage.SortDesc,
+	}
+	return s.GetAllMessages(filters, sort, pagination)
 }
 
 func (s SqlMessageStore) GetMessage(id types.MessageID) (msg *storage.StoredMessage, err error) {

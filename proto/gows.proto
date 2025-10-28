@@ -663,6 +663,7 @@ message GetMessagesRequest {
   Session session = 1;
   MessageFilters filters = 2;
   Pagination pagination = 3;
+  SortBy sortBy = 4;
 }
 
 //
