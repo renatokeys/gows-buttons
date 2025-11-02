@@ -485,7 +485,7 @@ func (s *Server) SendReaction(ctx context.Context, req *__.MessageReaction) (*__
 		}
 
 		messageID := cli.GenerateMessageID()
-		err = cli.NewsletterSendReaction(jid, serverID, req.Reaction, messageID)
+		err = cli.NewsletterSendReaction(ctx, jid, types.MessageServerID(serverID), req.Reaction, messageID)
 		if err != nil {
 			return nil, err
 		}

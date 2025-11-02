@@ -45,16 +45,17 @@ func (gows *GoWS) GetNewsletterMessagesByInvite(code string, params *GetNewslett
 		}
 	}
 
-	resp, err := gows.int.SendIQ(whatsmeow.DangerousInfoQuery{
-		Namespace: "newsletter",
-		Type:      "get",
-		To:        types.ServerJID,
-		Content: []waBinary.Node{{
-			Tag:   "messages",
-			Attrs: attrs,
-		}},
-		Context: context.TODO(),
-	})
+	resp, err := gows.int.SendIQ(
+		gows.Context,
+		whatsmeow.DangerousInfoQuery{
+			Namespace: "newsletter",
+			Type:      "get",
+			To:        types.ServerJID,
+			Content: []waBinary.Node{{
+				Tag:   "messages",
+				Attrs: attrs,
+			}},
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +288,7 @@ func (gows *GoWS) SendNewsletterPollVoteNode(
 		},
 		Content: content,
 	}
-	data, err := gows.int.SendNodeAndGetData(node)
+	data, err := gows.int.SendNodeAndGetData(ctx, node)
 	if err != nil {
 		gows.int.CancelResponse(reqID, response)
 		return resp, err
@@ -302,7 +303,7 @@ func (gows *GoWS) SendNewsletterPollVoteNode(
 		return resp, ctx.Err()
 	}
 	if isDisconnectNode(respNode) {
-		respNode, err = gows.int.RetryFrame("message send", reqID, data, respNode, ctx, 0)
+		respNode, err = gows.int.RetryFrame(ctx, "message send", reqID, data, respNode, 0)
 		if err != nil {
 			return resp, err
 		}

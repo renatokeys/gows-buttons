@@ -26,7 +26,7 @@ func (s *Server) SetProfileStatus(ctx context.Context, req *__.ProfileStatusRequ
 	if err != nil {
 		return nil, err
 	}
-	err = cli.SetStatusMessage(req.GetStatus())
+	err = cli.SetStatusMessage(ctx, req.GetStatus())
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (s *Server) SetProfilePicture(ctx context.Context, req *__.SetProfilePictur
 			return nil, err
 		}
 	}
-	_, err = cli.SetGroupPhoto(types.EmptyJID, picture)
+	_, err = cli.SetGroupPhoto(ctx, types.EmptyJID, picture)
 	if err != nil {
 		return nil, err
 	}

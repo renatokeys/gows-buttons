@@ -23,7 +23,7 @@ func (s *Server) GetProfilePicture(ctx context.Context, req *__.ProfilePictureRe
 	if err != nil {
 		return nil, err
 	}
-	info, err := cli.GetProfilePictureInfo(jid, &whatsmeow.GetProfilePictureParams{
+	info, err := cli.GetProfilePictureInfo(ctx, jid, &whatsmeow.GetProfilePictureParams{
 		Preview: false,
 	})
 	if errors.Is(err, whatsmeow.ErrProfilePictureNotSet) {
@@ -54,7 +54,7 @@ func (s *Server) CheckPhones(ctx context.Context, req *__.CheckPhonesRequest) (*
 		phones[i] = p
 	}
 
-	res, err := cli.IsOnWhatsApp(phones)
+	res, err := cli.IsOnWhatsApp(ctx, phones)
 	if err != nil {
 		return nil, err
 	}

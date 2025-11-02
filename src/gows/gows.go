@@ -223,7 +223,7 @@ func (gows *GoWS) SendMessage(ctx context.Context, to types.JID, msg *waE2E.Mess
 // MarkRead marks messages as read and emits a receipt event
 func (gows *GoWS) MarkRead(ids []types.MessageID, chat types.JID, sender types.JID, receiptType types.ReceiptType) error {
 	timestamp := time.Now()
-	err := gows.Client.MarkRead(ids, timestamp, chat, sender, receiptType)
+	err := gows.Client.MarkRead(gows.Context, ids, timestamp, chat, sender, receiptType)
 	if err != nil {
 		return err
 	}

@@ -85,7 +85,7 @@ func (s *Server) LeaveGroup(ctx context.Context, req *__.JidRequest) (*__.Empty,
 	if err != nil {
 		return nil, err
 	}
-	err = cli.LeaveGroup(jid)
+	err = cli.LeaveGroup(ctx, jid)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (s *Server) GetGroupInviteLink(ctx context.Context, req *__.JidRequest) (*_
 	if err != nil {
 		return nil, err
 	}
-	link, err := cli.GetGroupInviteLink(jid, false)
+	link, err := cli.GetGroupInviteLink(ctx, jid, false)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (s *Server) RevokeGroupInviteLink(ctx context.Context, req *__.JidRequest) 
 	if err != nil {
 		return nil, err
 	}
-	link, err := cli.GetGroupInviteLink(jid, false)
+	link, err := cli.GetGroupInviteLink(ctx, jid, false)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (s *Server) GetGroupInfoFromLink(ctx context.Context, req *__.GroupCodeRequ
 	if err != nil {
 		return nil, err
 	}
-	info, err := cli.GetGroupInfoFromLink(req.GetCode())
+	info, err := cli.GetGroupInfoFromLink(ctx, req.GetCode())
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (s *Server) JoinGroupWithLink(ctx context.Context, req *__.GroupCodeRequest
 	if err != nil {
 		return nil, err
 	}
-	jid, err := cli.JoinGroupWithLink(req.GetCode())
+	jid, err := cli.JoinGroupWithLink(ctx, req.GetCode())
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func (s *Server) SetGroupName(ctx context.Context, req *__.JidStringRequest) (*_
 	if err != nil {
 		return nil, err
 	}
-	err = cli.SetGroupName(jid, req.GetValue())
+	err = cli.SetGroupName(ctx, jid, req.GetValue())
 	if err != nil {
 		return nil, err
 	}
@@ -176,12 +176,12 @@ func (s *Server) SetGroupDescription(ctx context.Context, req *__.JidStringReque
 		return nil, err
 	}
 	prevTopicId := ""
-	group, err := cli.GetGroupInfo(jid)
+	group, err := cli.GetGroupInfo(ctx, jid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get group info: %w", err)
 	}
 	prevTopicId = group.TopicID
-	err = cli.SetGroupDescription(jid, req.GetValue(), prevTopicId)
+	err = cli.SetGroupDescription(ctx, jid, req.GetValue(), prevTopicId)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +205,7 @@ func (s *Server) SetGroupPicture(ctx context.Context, req *__.SetPictureRequest)
 			return nil, err
 		}
 	}
-	_, err = cli.SetGroupPhoto(jid, picture)
+	_, err = cli.SetGroupPhoto(ctx, jid, picture)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +221,7 @@ func (s *Server) SetGroupLocked(ctx context.Context, req *__.JidBoolRequest) (*_
 	if err != nil {
 		return nil, err
 	}
-	err = cli.SetGroupLocked(jid, req.GetValue())
+	err = cli.SetGroupLocked(ctx, jid, req.GetValue())
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func (s *Server) SetGroupAnnounce(ctx context.Context, req *__.JidBoolRequest) (
 	if err != nil {
 		return nil, err
 	}
-	err = cli.SetGroupAnnounce(jid, req.GetValue())
+	err = cli.SetGroupAnnounce(ctx, jid, req.GetValue())
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +275,7 @@ func (s *Server) UpdateGroupParticipants(ctx context.Context, req *__.UpdatePart
 	default:
 		return nil, fmt.Errorf("unknown action: %v", req.Action)
 	}
-	result, err := cli.UpdateGroupParticipants(jid, participants, action)
+	result, err := cli.UpdateGroupParticipants(ctx, jid, participants, action)
 	if err != nil {
 		return nil, err
 	}
