@@ -27,7 +27,7 @@ func (s *Server) StartSession(ctx context.Context, req *__.StartSessionRequest) 
 	case dialect == "sqlite3" || dialect == "sqlite":
 		// busy_timeout to prevent "database is locked" errors
 		// DO NOT add cache=shared, it's not safe
-		address = req.Config.Store.Address + "?_foreign_keys=on&_busy_timeout=10000"
+		address = req.Config.Store.Address + "?_foreign_keys=on&_busy_timeout=30000"
 	case dialect == "postgres":
 		address = addApplicationName(req.Config.Store.Address, "GOWS")
 	default:
