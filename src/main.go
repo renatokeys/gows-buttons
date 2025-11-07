@@ -31,8 +31,8 @@ func listenSocket(log waLog.Logger, path string) *net.Listener {
 }
 
 func buildGrpcServer(log waLog.Logger) *grpc.Server {
-	// 128 MB
-	maxMessageSize := 128 * 1024 * 1024
+	// 512 MiB default limit for large media transfers
+	maxMessageSize := 512 * 1024 * 1024
 
 	// Define a custom recovery function to handle panics
 	recoveryOpts := []recovery.Option{
@@ -96,6 +96,7 @@ func remove(path string) {
 func main() {
 	flag.Parse()
 	log := gowsLog.Stdout("Server", "DEBUG", false)
+	log.Infof("Maximum gRPC message size set to 512 MiB")
 
 	// Start pprof HTTP server if enabled
 	startPprofServer(log)
