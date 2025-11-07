@@ -243,6 +243,10 @@ func (st *StorageEventHandler) handleReceipt(event *events.Receipt) {
 		st.log.Debugf("Unknown receipt type: %v", event.Type)
 		return
 	}
+	if event.Chat.Server == types.StatusBroadcastJID.Server && event.Chat.User == types.StatusBroadcastJID.User {
+		// Ignore
+		st.log.Debugf("Ignoring receipt for '%v(%v)'", event.Chat, event.MessageIDs)
+	}
 	for _, id := range event.MessageIDs {
 		st.log.Debugf("Updating status for message %v(%v) to %v (receipt type: '%v')", event.Chat, id, status, event.Type.GoString())
 		msg, err := st.storage.Messages.GetMessage(id)
