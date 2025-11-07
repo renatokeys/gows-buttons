@@ -71,6 +71,10 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 		}
 	}
 
+	if len(req.GetMentions()) > 0 {
+		contextInfo = cli.PopulateContextInfoWithMentions(contextInfo, req.GetMentions())
+	}
+
 	var message *waE2E.Message
 	extra := whatsmeow.SendRequestExtra{}
 

@@ -80,6 +80,17 @@ func (gows *GoWS) PopulateContextInfoWithReply(info *waE2E.ContextInfo, replyToI
 	return info, nil
 }
 
+func (gows *GoWS) PopulateContextInfoWithMentions(info *waE2E.ContextInfo, mentions []string) *waE2E.ContextInfo {
+	if len(mentions) == 0 {
+		return info
+	}
+	if info == nil {
+		info = &waE2E.ContextInfo{}
+	}
+	info.MentionedJID = mentions
+	return info
+}
+
 func ExtractContextInfo(event *events.Message) *waE2E.ContextInfo {
 	if event.Message == nil {
 		return nil

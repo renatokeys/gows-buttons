@@ -383,6 +383,8 @@ message MessageRequest {
 
   // Poll vote message
   PollVoteMessage pollVote = 18;
+
+  repeated string mentions = 19;
 }
 
 message Row {
