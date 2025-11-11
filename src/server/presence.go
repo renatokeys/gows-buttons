@@ -69,10 +69,6 @@ func (s *Server) SubscribePresence(ctx context.Context, req *__.SubscribePresenc
 	if err != nil {
 		return nil, err
 	}
-	err = cli.SendPresence(ctx, types.PresenceAvailable)
-	if err != nil {
-		return nil, err
-	}
 	err = cli.SubscribePresence(ctx, jid)
 	if err != nil {
 		return nil, err
