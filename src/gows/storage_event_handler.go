@@ -255,7 +255,7 @@ func (st *StorageEventHandler) handleReceipt(event *events.Receipt) {
 			continue
 		}
 		if err != nil {
-			st.log.Errorf("Error getting message %v(%v): %v", event.Chat, id, err)
+			st.log.Debugf("Error getting message - storage handle receipt %v(%v): %v", event.Chat, id, err)
 			continue
 		}
 		if msg.Status != nil && *msg.Status >= status {
