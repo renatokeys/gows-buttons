@@ -60,9 +60,9 @@ func configureSqlite3(db *sqlx.DB) (err error) {
 	//
 	// https://github.com/devlikeapro/waha/issues/1503
 	//
-	//db.SetMaxOpenConns(1)
-	//db.SetMaxIdleConns(1)
-	//db.SetConnMaxLifetime(0)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(1)
+	db.SetConnMaxLifetime(0)
 
 	// PRAGMA
 	_, err = db.Exec("PRAGMA journal_mode=WAL;")
