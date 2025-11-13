@@ -164,6 +164,7 @@ func BuildSession(
 		ignoreJids: ignoreJids,
 	}
 	gows.GetMessageForRetry = gows.storageEventHandler.GetMessageForRetry
+	gows.BackgroundEventCtx = gows.Context
 	return gows, nil
 }
 
