@@ -476,7 +476,7 @@ func (st *StorageEventHandler) handleContactLidJidMapping(contact *events.Contac
 	}
 
 	// Save lid to jid mapping
-	if lid == types.EmptyJID && jid == types.EmptyJID {
+	if lid == types.EmptyJID || jid == types.EmptyJID {
 		return
 	}
 	err = cli.Store.LIDs.PutLIDMapping(ctx, lid, jid)
