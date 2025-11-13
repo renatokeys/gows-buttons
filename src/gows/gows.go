@@ -101,13 +101,13 @@ func (gows *GoWS) listenQRCodeEvents() {
 }
 
 func (gows *GoWS) Stop() {
-	gows.cancelContext()
 	gows.Disconnect()
 	err := gows.container.Close()
 	if err != nil {
 		gows.Log.Errorf("Error closing container: %v", err)
 	}
 	close(gows.events)
+	gows.cancelContext()
 }
 
 func (gows *GoWS) GetOwnId() types.JID {
