@@ -273,7 +273,7 @@ func (st *StorageEventHandler) handleReceipt(event *events.Receipt) {
 
 func (st *StorageEventHandler) handleHistorySync(event *events.HistorySync) {
 	for _, conv := range event.Data.Conversations {
-		jid, err := types.ParseJID(conv.GetId())
+		jid, err := types.ParseJID(conv.GetID())
 		if err != nil {
 			st.log.Errorf("Error parsing JID: %v", err)
 			continue
