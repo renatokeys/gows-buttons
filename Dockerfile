@@ -1,5 +1,5 @@
 # Use the official Golang image
-FROM golang:1.24-bullseye as builder
+FROM golang:1.24-bookworm as builder
 
 # Install required packages
 RUN apt-get update && apt-get install -y \
@@ -24,7 +24,7 @@ RUN export GOPATH=$HOME/go && \
     make all
 
 # Create a new minimal container to hold the binary
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 WORKDIR /release
 
