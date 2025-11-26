@@ -231,8 +231,9 @@ func (gows *GoWS) MarkRead(ids []types.MessageID, chat types.JID, sender types.J
 
 	receipt := &events.Receipt{
 		MessageSource: types.MessageSource{
-			Chat:   chat,
-			Sender: sender,
+			Chat:     chat,
+			Sender:   sender,
+			IsFromMe: true,
 		},
 		MessageIDs: ids,
 		Type:       receiptType,
