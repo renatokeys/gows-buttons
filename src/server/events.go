@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/devlikeapro/gows/proto"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -28,10 +27,10 @@ func (s *Server) safeMarshal(v interface{}) (result string) {
 }
 
 func (s *Server) StreamEvents(req *__.Session, stream grpc.ServerStreamingServer[__.EventJson]) error {
-	name := req.GetId()
+	sessionName := req.GetId()
 	streamId := uuid.New()
-	listener := s.addListener(name, streamId)
-	defer s.removeListener(name, streamId)
+	listener := s.addListener(sessionName, streamId)
+	defer s.removeListener(sessionName, streamId)
 	for {
 		select {
 		case <-stream.Context().Done():
@@ -47,7 +46,7 @@ func (s *Server) StreamEvents(req *__.Session, stream grpc.ServerStreamingServer
 			}
 
 			data := __.EventJson{
-				Session: name,
+				Session: sessionName,
 				Event:   eventType,
 				Data:    jsonString,
 			}
@@ -62,15 +61,12 @@ func (s *Server) StreamEvents(req *__.Session, stream grpc.ServerStreamingServer
 func (s *Server) SendEventToAllListeners(session string, event interface{}) {
 	listeners := s.getListeners(session)
 	for _, listener := range listeners {
-		go func() {
-			defer func() {
-				if err := recover(); err != nil {
-					// Print log error and ignore
-					fmt.Print("Error when sending event to listener: ", err)
-				}
-			}()
-			listener <- event
-		}()
+		// Drop the event if the listener buffer is full to avoid blocking and goroutine leaks.
+		select {
+		case listener.ch <- event:
+		default:
+			s.log.Warnf("Dropping event for slow listener %s, session %s", listener.id.String(), session)
+		}
 	}
 }
 
@@ -103,12 +99,18 @@ func (s *Server) removeListener(session string, id uuid.UUID) {
 	close(listener)
 }
 
-func (s *Server) getListeners(session string) []chan interface{} {
+type listenerEntry struct {
+	id uuid.UUID
+	ch chan interface{}
+}
+
+func (s *Server) getListeners(session string) []listenerEntry {
 	s.listenersLock.RLock()
 	defer s.listenersLock.RUnlock()
-	listeners := make([]chan interface{}, 0, len(s.listeners))
-	for _, listener := range s.listeners[session] {
-		listeners = append(listeners, listener)
+	sessionListeners := s.listeners[session]
+	listeners := make([]listenerEntry, 0, len(sessionListeners))
+	for id, listener := range sessionListeners {
+		listeners = append(listeners, listenerEntry{id: id, ch: listener})
 	}
 	return listeners
 }
