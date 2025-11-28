@@ -11,6 +11,28 @@ import (
 	"time"
 )
 
+func (gows *GoWS) DownloadAnyMedia(ctx context.Context, msg *waE2E.Message) (data []byte, err error) {
+	if msg == nil {
+		return nil, whatsmeow.ErrNothingDownloadableFound
+	}
+	switch {
+	case msg.ImageMessage != nil:
+		return gows.Download(ctx, msg.ImageMessage)
+	case msg.VideoMessage != nil:
+		return gows.Download(ctx, msg.VideoMessage)
+	case msg.AudioMessage != nil:
+		return gows.Download(ctx, msg.AudioMessage)
+	case msg.DocumentMessage != nil:
+		return gows.Download(ctx, msg.DocumentMessage)
+	case msg.DocumentWithCaptionMessage != nil:
+		return gows.Download(ctx, msg.DocumentWithCaptionMessage.Message.DocumentMessage)
+	case msg.StickerMessage != nil:
+		return gows.Download(ctx, msg.StickerMessage)
+	default:
+		return nil, whatsmeow.ErrNothingDownloadableFound
+	}
+}
+
 func (gows *GoWS) UploadMedia(
 	ctx context.Context,
 	jid types.JID,

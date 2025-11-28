@@ -57,7 +57,7 @@ func (s *Server) DownloadMedia(ctx context.Context, req *__.DownloadMediaRequest
 		return nil, status.Error(codes.DeadlineExceeded, "download media timed out before start")
 	}
 
-	resp, err := cli.DownloadAny(ctx, msg)
+	resp, err := cli.DownloadAnyMedia(ctx, msg)
 	if err != nil {
 		if ctx.Err() != nil {
 			cli.Log.Warnf("Media download for '%s' canceled: %v", req.MessageId, ctx.Err())
