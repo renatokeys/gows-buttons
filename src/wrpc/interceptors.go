@@ -1,4 +1,4 @@
-package server
+package wrpc
 
 import (
 	"context"
@@ -9,9 +9,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-// UnaryCallTimeout defines the maximum duration a unary RPC is allowed to run.
-const UnaryCallTimeout = 30 * time.Minute
 
 // UnaryTimeoutInterceptor enforces a maximum duration for unary RPCs to prevent
 // requests that never complete from holding onto memory indefinitely.
