@@ -46,6 +46,7 @@ func buildGrpcServer(log waLog.Logger) *grpc.Server {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			recovery.UnaryServerInterceptor(recoveryOpts...),
+			server.UnaryTimeoutInterceptor(server.UnaryCallTimeout),
 		),
 		grpc.ChainStreamInterceptor(
 			recovery.StreamServerInterceptor(recoveryOpts...),

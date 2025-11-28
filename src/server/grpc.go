@@ -1,12 +1,13 @@
 package server
 
 import (
+	"sync"
+
 	"github.com/devlikeapro/gows/gows"
 	gowsLog "github.com/devlikeapro/gows/log"
 	pb "github.com/devlikeapro/gows/proto"
 	"github.com/google/uuid"
 	waLog "go.mau.fi/whatsmeow/util/log"
-	"sync"
 )
 
 // assert that Server implements pb.MessageServiceServer
