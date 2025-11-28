@@ -14,6 +14,8 @@ import (
 var UrlRegex = `(http(s)?:\/\/.)(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)`
 var UrlRe = regexp.MustCompile(UrlRegex)
 
+const fetchBodyLimit = 10 * 1024 * 1024 // 10 MiB safety cap
+
 func ExtractUrlFromText(text string) string {
 	match := UrlRe.FindString(text)
 	return match
@@ -99,10 +101,19 @@ func FetchBodyByUrl(ctx context.Context, uri string) ([]byte, error) {
 		return nil, fmt.Errorf("HTTP error: %s", resp.Status)
 	}
 
+	// Refuse to download bodies larger than the safety cap
+	if resp.ContentLength > fetchBodyLimit {
+		return nil, fmt.Errorf("HTTP body too large: %d > %d", resp.ContentLength, fetchBodyLimit)
+	}
+
 	// Read response body
-	body, err := io.ReadAll(resp.Body)
+	limited := io.LimitReader(resp.Body, fetchBodyLimit+1)
+	body, err := io.ReadAll(limited)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	if int64(len(body)) > fetchBodyLimit {
+		return nil, fmt.Errorf("HTTP body too large: > %d bytes", fetchBodyLimit)
 	}
 
 	// Return the body
