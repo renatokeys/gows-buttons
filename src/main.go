@@ -40,7 +40,7 @@ func buildGrpcServer(log waLog.Logger) *grpc.Server {
 	maxMessageSize := 512 * 1024 * 1024
 
 	// Avoid retaining huge pooled buffers: only reuse up to 1 MiB.
-	bufferPool := wrpc.NewCappedBufferPool(10 << 20)
+	bufferPool := wrpc.NewCappedBufferPool(1 << 20)
 
 	// Define a custom recovery function to handle panics
 	recoveryOpts := []recovery.Option{
