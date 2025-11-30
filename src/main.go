@@ -62,6 +62,7 @@ func buildGrpcServer(log waLog.Logger) *grpc.Server {
 		grpc.MaxRecvMsgSize(maxMessageSize),
 		grpc.MaxSendMsgSize(maxMessageSize),
 		experimental.BufferPool(bufferPool),
+		grpc.ForceServerCodecV2(wrpc.NewProtoCodec(bufferPool)),
 	)
 	srv := server.NewServer()
 	// Add an event handler to the client
