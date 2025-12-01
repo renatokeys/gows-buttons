@@ -7,6 +7,7 @@ import (
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"os"
 	"time"
 )
 
@@ -65,6 +66,17 @@ func (s *Server) DownloadMedia(ctx context.Context, req *__.DownloadMediaRequest
 		}
 		cli.Log.Errorf("Failed to download media for '%s' message: %v", req.MessageId, err)
 		return nil, status.Errorf(codes.Internal, "failed to download media: %v", err)
+	}
+	if req.GetContentPath() != "" {
+		if err := os.WriteFile(req.GetContentPath(), resp, 0644); err != nil {
+			// Fallback to returning the content in the response
+			cli.Log.Errorf("Failed to write media to '%s': %v", req.GetContentPath(), err)
+			return &__.DownloadMediaResponse{Content: resp}, nil
+		}
+		return &__.DownloadMediaResponse{
+			Content:     []byte{},
+			ContentPath: req.GetContentPath(),
+		}, nil
 	}
 	return &__.DownloadMediaResponse{Content: resp}, nil
 }

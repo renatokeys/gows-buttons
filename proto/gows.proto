@@ -612,10 +612,12 @@ message DownloadMediaRequest {
   string message = 2; // JSON string
   string jid = 3;
   string messageId = 4;
+  string contentPath = 5;
 }
 
 message DownloadMediaResponse {
   bytes content = 1;
+  string contentPath = 5;
 }
 
 //
