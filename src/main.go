@@ -36,8 +36,8 @@ func listenSocket(log waLog.Logger, path string) *net.Listener {
 func buildGrpcServer(log waLog.Logger) *grpc.Server {
 	// defines the maximum duration a unary RPC is allowed to run.
 	unaryCallTimeout := 30 * time.Minute
-	// 512 MiB default limit for large media transfers
-	maxMessageSize := 512 * 1024 * 1024
+	// limit for large media transfers
+	maxMessageSize := 128 * 1024 * 1024
 
 	// Avoid retaining huge pooled buffers: only reuse up to 1 MiB.
 	bufferPool := wrpc.NewCappedBufferPool(1 << 20)
