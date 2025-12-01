@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/devlikeapro/gows/gows"
 	waBinary "go.mau.fi/whatsmeow/binary"
+	"os"
 	"strconv"
 	"time"
 
@@ -73,6 +74,15 @@ func (s *Server) SendMessage(ctx context.Context, req *__.MessageRequest) (*__.M
 
 	if len(req.GetMentions()) > 0 {
 		contextInfo = cli.PopulateContextInfoWithMentions(contextInfo, req.GetMentions())
+	}
+
+	if req.Media != nil && req.Media.GetContentPath() != "" {
+		content, err := os.ReadFile(req.Media.GetContentPath())
+		if err != nil {
+			cli.Log.Errorf("Failed to read media from '%s': %v", req.Media.GetContentPath(), err)
+			return nil, fmt.Errorf("failed to read media from file: %w", err)
+		}
+		req.Media.Content = content
 	}
 
 	var message *waE2E.Message

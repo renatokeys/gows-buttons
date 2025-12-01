@@ -311,6 +311,7 @@ message Media {
   string mimetype = 3;
   AudioInfo audio = 4;
   string filename = 5;
+  string contentPath = 6;
 }
 
 message LinkPreview {
