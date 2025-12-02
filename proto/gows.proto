@@ -166,6 +166,11 @@ service MessageService {
   rpc DownloadMedia(DownloadMediaRequest) returns (DownloadMediaResponse);
 
   //
+  // Calls
+  //
+  rpc RejectCall(RejectCallRequest) returns (Empty);
+
+  //
   // Storage
   //
   rpc GetMessageById(EntityByIdRequest) returns (Json);
@@ -746,6 +751,15 @@ message CancelEventMessageRequest {
 //
 message GetLidsRequest {
   Session session = 1;
+}
+
+//
+// Lids
+//
+message RejectCallRequest {
+  Session session = 1;
+  string from = 2;
+  string id = 3;
 }
 
 //
