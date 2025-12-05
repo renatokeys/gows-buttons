@@ -27,8 +27,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/devlikeapro/goscraper v0.0.0-20250703084707-d7dc581403e0 h1:QEVEmrXHSApILFhlUat69hqKhLTlVUl1pop+biLztCk=
 github.com/devlikeapro/goscraper v0.0.0-20250703084707-d7dc581403e0/go.mod h1:Ezk+40Xo1pBhyjQxDWnPpujW7munML5zGsdecYMi43o=
-github.com/devlikeapro/whatsmeow v0.0.0-20251203055646-133ef0c52795 h1:uxTAnulB6ciI9IivP2APo7DUx+I3KJSTDRA0yHVfeWc=
-github.com/devlikeapro/whatsmeow v0.0.0-20251203055646-133ef0c52795/go.mod h1:5aYaEa3FF5e5XWsA8Xa80ttUXZvb6HyaBGgo2SfzUkE=
+github.com/devlikeapro/whatsmeow v0.0.0-20251205064725-0c4d6ca9bcce h1:WZYZUHgr+uiQlAQR0rlll1lrBS2Dt7S47jBgHKBe6ns=
+github.com/devlikeapro/whatsmeow v0.0.0-20251205064725-0c4d6ca9bcce/go.mod h1:5aYaEa3FF5e5XWsA8Xa80ttUXZvb6HyaBGgo2SfzUkE=
 github.com/dhui/dktest v0.4.5 h1:uUfYBIVREmj/Rw6MvgmqNAYzTiKOHJak+enB5Di73MM=
 github.com/dhui/dktest v0.4.5/go.mod h1:tmcyeHDKagvlDrz7gDKq4UAJOLIfVZYkfD5OnHDwcCo=
 github.com/disintegration/imaging v1.6.2/go.mod h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=
