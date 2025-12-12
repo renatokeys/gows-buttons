@@ -63,6 +63,10 @@ func buildGrpcServer(log waLog.Logger) *grpc.Server {
 		grpc.MaxSendMsgSize(maxMessageSize),
 		experimental.BufferPool(bufferPool),
 		grpc.ForceServerCodecV2(wrpc.NewProtoCodec(bufferPool)),
+		// Allow more streams and increase window sizes for better performance
+		grpc.MaxConcurrentStreams(5000),
+		grpc.InitialWindowSize(16*1024*1024),
+		grpc.InitialConnWindowSize(32*1024*1024),
 	)
 	srv := server.NewServer()
 	// Add an event handler to the client
