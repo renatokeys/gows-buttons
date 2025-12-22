@@ -28,18 +28,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libvips-dev protobuf-compiler
 
+      - name: Install protoc plugins
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+      - name: Generate proto
+        run: |
+          export PATH=$PATH:$(go env GOPATH)/bin
+          mkdir -p src/proto
+          protoc \
+            -I=. \
+            --go_out=./src/proto \
+            --go-grpc_out=./src/proto \
+            --experimental_allow_proto3_optional \
+            proto/*.proto
+
       - name: Update go modules
         run: |
           cd src
           go mod tidy
-
-      - name: Generate proto
-        run: |
-          cd src
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-          export PATH=$PATH:$(go env GOPATH)/bin
-          protoc --go_out=. --go-grpc_out=. -I../proto ../proto/gows.proto || true
 
       - name: Build amd64
         run: |
@@ -49,12 +57,12 @@ jobs:
 
       - name: Build arm64
         run: |
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu || true
           cd src
           PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig \
           CGO_ENABLED=1 GOOS=linux GOARCH=arm64 \
           CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ \
-          go build -o ../bin/gows-arm64 . || echo "arm64 build requires cross-compile libs"
+          go build -o ../bin/gows-arm64 . || echo "arm64 build skipped - cross-compile libs not available"
 
       - name: Get tag name
         id: tag
