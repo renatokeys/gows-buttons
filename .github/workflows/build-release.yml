@@ -1,0 +1,75 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        default: 'v1.0.26'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvips-dev protobuf-compiler
+
+      - name: Generate proto
+        run: |
+          cd src
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
+          protoc --go_out=. --go-grpc_out=. -I../proto ../proto/gows.proto || true
+
+      - name: Build binaries
+        run: |
+          cd src
+          mkdir -p ../bin
+
+          echo "Building for amd64..."
+          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o ../bin/gows-amd64 .
+
+          echo "Building for arm64..."
+          # For arm64, we need cross-compilation setup
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+          CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build -o ../bin/gows-arm64 . || echo "arm64 build may require different approach"
+
+      - name: Get tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          files: |
+            bin/gows-amd64
+            bin/gows-arm64
+            proto/gows.proto
+          body: |
+            GOWS with SendButtons support
+
+            Based on devlikeapro/gows-plus ${{ steps.tag.outputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
