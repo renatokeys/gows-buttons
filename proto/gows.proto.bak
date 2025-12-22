@@ -124,7 +124,6 @@ service MessageService {
   rpc EditMessage(EditMessageRequest) returns (MessageResponse);
   rpc RevokeMessage(RevokeMessageRequest) returns (MessageResponse);
   rpc SendButtonReply (ButtonReplyRequest) returns (MessageResponse);
-  rpc SendButtons (SendButtonsRequest) returns (MessageResponse);
 
   //
   // Newsletters
@@ -776,33 +775,4 @@ message PollVoteMessage {
   string pollMessageId = 1;
   optional int64 pollServerId = 2;  // only for Channels
   repeated string options = 3;
-}
-
-//
-// Buttons
-//
-enum ButtonType {
-  BUTTON_REPLY = 0;
-  BUTTON_URL = 1;
-  BUTTON_CALL = 2;
-  BUTTON_COPY = 3;
-}
-
-message Button {
-  ButtonType type = 1;
-  string text = 2;
-  string id = 3;
-  string url = 4;
-  string phoneNumber = 5;
-  string copyCode = 6;
-}
-
-message SendButtonsRequest {
-  Session session = 1;
-  string jid = 2;
-  string header = 3;
-  bytes headerImage = 4;
-  string body = 5;
-  string footer = 6;
-  repeated Button buttons = 7;
 }

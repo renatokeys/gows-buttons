@@ -1,0 +1,99 @@
+name: Sync Upstream and Apply Buttons
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/devlikeapro/gows-plus.git || true
+          git fetch upstream
+
+      - name: Check for upstream changes
+        id: check
+        run: |
+          UPSTREAM_COMMIT=$(git rev-parse upstream/main)
+          LAST_SYNC=$(cat .last-sync 2>/dev/null || echo "none")
+          if [ "$UPSTREAM_COMMIT" != "$LAST_SYNC" ]; then
+            echo "needs_sync=true" >> $GITHUB_OUTPUT
+            echo "upstream_commit=$UPSTREAM_COMMIT" >> $GITHUB_OUTPUT
+          else
+            echo "needs_sync=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sync with upstream
+        if: steps.check.outputs.needs_sync == 'true'
+        run: |
+          # Reset to upstream
+          git checkout -B sync-temp upstream/main
+
+          # Copy our custom files
+          git checkout main -- patches/
+          git checkout main -- .github/
+
+          # Apply buttons additions
+          ./patches/apply-buttons.sh
+
+          # Update go.mod to use our whatsmeow fork
+          ./patches/update-gomod.sh
+
+          # Save sync marker
+          echo "${{ steps.check.outputs.upstream_commit }}" > .last-sync
+
+          # Commit
+          git add -A
+          git commit -m "feat: sync upstream + apply buttons
+
+          upstream-sync: ${{ steps.check.outputs.upstream_commit }}"
+
+          # Update main
+          git checkout main
+          git reset --hard sync-temp
+          git push origin main --force
+
+      - name: Setup Go
+        if: steps.check.outputs.needs_sync == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Build binaries
+        if: steps.check.outputs.needs_sync == 'true'
+        run: |
+          cd src
+
+          # Generate proto
+          make proto || true
+
+          # Build for multiple platforms
+          GOOS=linux GOARCH=amd64 go build -o ../bin/gows-amd64 .
+          GOOS=linux GOARCH=arm64 go build -o ../bin/gows-arm64 .
+
+      - name: Create Release
+        if: steps.check.outputs.needs_sync == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}-buttons
+          name: Release v1.0.${{ github.run_number }}-buttons
+          files: |
+            bin/gows-amd64
+            bin/gows-arm64
+            proto/gows.proto
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
