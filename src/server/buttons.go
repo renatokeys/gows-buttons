@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func randomId() string {
+func randomButtonId() string {
 	return fmt.Sprintf("%016d", rand.Int63())
 }
 
@@ -33,33 +33,33 @@ func buttonTypeName(t __.ButtonType) string {
 }
 
 func buttonToNativeFlowButton(button *__.Button) *waE2E.InteractiveMessage_NativeFlowMessage_NativeFlowButton {
-	buttonParams := map[string]interface{}{
-		"display_text": button.Text,
-		"id":           button.Id,
-		"disabled":     false,
+	buttonId := button.GetId()
+	if buttonId == "" {
+		buttonId = randomButtonId()
 	}
 
-	if button.Id == "" {
-		buttonParams["id"] = randomId()
+	buttonParams := map[string]interface{}{
+		"display_text": button.GetText(),
+		"id":           buttonId,
+		"disabled":     false,
 	}
 
 	switch button.Type {
 	case __.ButtonType_BUTTON_CALL:
-		buttonParams["phone_number"] = button.PhoneNumber
+		buttonParams["phone_number"] = button.GetPhoneNumber()
 	case __.ButtonType_BUTTON_COPY:
-		buttonParams["copy_code"] = button.CopyCode
+		buttonParams["copy_code"] = button.GetCopyCode()
 	case __.ButtonType_BUTTON_URL:
-		buttonParams["url"] = button.Url
-		buttonParams["merchant_url"] = button.Url
+		buttonParams["url"] = button.GetUrl()
+		buttonParams["merchant_url"] = button.GetUrl()
 	}
 
 	paramsJson, _ := json.Marshal(buttonParams)
 	name := buttonTypeName(button.Type)
-	paramsStr := string(paramsJson)
 
 	return &waE2E.InteractiveMessage_NativeFlowMessage_NativeFlowButton{
-		Name:             &name,
-		ButtonParamsJSON: &paramsStr,
+		Name:             proto.String(name),
+		ButtonParamsJSON: proto.String(string(paramsJson)),
 	}
 }
 
@@ -82,14 +82,13 @@ func (s *Server) SendButtons(ctx context.Context, req *__.SendButtonsRequest) (*
 
 	messageParamsJson, _ := json.Marshal(map[string]interface{}{
 		"from":       "api",
-		"templateId": randomId(),
+		"templateId": randomButtonId(),
 	})
-	messageParamsStr := string(messageParamsJson)
 
 	// Build native flow message
 	nativeFlowMessage := &waE2E.InteractiveMessage_NativeFlowMessage{
 		Buttons:           buttons,
-		MessageParamsJSON: &messageParamsStr,
+		MessageParamsJSON: proto.String(string(messageParamsJson)),
 	}
 
 	// Build interactive message
@@ -100,16 +99,16 @@ func (s *Server) SendButtons(ctx context.Context, req *__.SendButtonsRequest) (*
 	}
 
 	// Add header if present
-	if req.Header != "" || len(req.HeaderImage) > 0 {
-		hasMedia := len(req.HeaderImage) > 0
+	if req.GetHeader() != "" || len(req.GetHeaderImage()) > 0 {
+		hasMedia := len(req.GetHeaderImage()) > 0
 		interactiveMessage.Header = &waE2E.InteractiveMessage_Header{
-			Title:              proto.String(req.Header),
-			HasMediaAttachment: &hasMedia,
+			Title:              proto.String(req.GetHeader()),
+			HasMediaAttachment: proto.Bool(hasMedia),
 		}
 
 		// Upload header image if present
-		if len(req.HeaderImage) > 0 {
-			mediaResponse, err := cli.UploadMedia(ctx, jid, req.HeaderImage, whatsmeow.MediaImage)
+		if len(req.GetHeaderImage()) > 0 {
+			mediaResponse, err := cli.UploadMedia(ctx, jid, req.GetHeaderImage(), whatsmeow.MediaImage)
 			if err != nil {
 				return nil, err
 			}
@@ -127,16 +126,16 @@ func (s *Server) SendButtons(ctx context.Context, req *__.SendButtonsRequest) (*
 	}
 
 	// Add body if present
-	if req.Body != "" {
+	if req.GetBody() != "" {
 		interactiveMessage.Body = &waE2E.InteractiveMessage_Body{
-			Text: proto.String(req.Body),
+			Text: proto.String(req.GetBody()),
 		}
 	}
 
 	// Add footer if present
-	if req.Footer != "" {
+	if req.GetFooter() != "" {
 		interactiveMessage.Footer = &waE2E.InteractiveMessage_Footer{
-			Text: proto.String(req.Footer),
+			Text: proto.String(req.GetFooter()),
 		}
 	}
 
@@ -145,10 +144,13 @@ func (s *Server) SendButtons(ctx context.Context, req *__.SendButtonsRequest) (*
 		InteractiveMessage: interactiveMessage,
 	}
 
-	res, err := cli.SendMessage(ctx, jid, message)
+	res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &__.MessageResponse{Id: res.ID, Timestamp: res.Timestamp.Unix()}, nil
+	return &__.MessageResponse{
+		Id:        res.Info.ID,
+		Timestamp: res.Info.Timestamp.Unix(),
+	}, nil
 }

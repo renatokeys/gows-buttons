@@ -59,4 +59,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace go.mau.fi/whatsmeow => github.com/renatokeys/whatsmeow v0.0.0-buttons-20251222
+replace go.mau.fi/whatsmeow => github.com/renatokeys/whatsmeow v0.0.0-20251222233323-cde29eb8cd29
