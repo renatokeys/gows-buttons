@@ -139,9 +139,18 @@ func (s *Server) SendButtons(ctx context.Context, req *__.SendButtonsRequest) (*
 		}
 	}
 
-	// Send InteractiveMessage directly (no ViewOnceMessage wrapper)
+	// Wrap in ViewOnceMessage (required for buttons to display correctly)
+	deviceListMetadataVersion := int32(2)
 	message := &waE2E.Message{
-		InteractiveMessage: interactiveMessage,
+		ViewOnceMessage: &waE2E.FutureProofMessage{
+			Message: &waE2E.Message{
+				MessageContextInfo: &waE2E.MessageContextInfo{
+					DeviceListMetadata:        &waE2E.DeviceListMetadata{},
+					DeviceListMetadataVersion: &deviceListMetadataVersion,
+				},
+				InteractiveMessage: interactiveMessage,
+			},
+		},
 	}
 
 	res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
