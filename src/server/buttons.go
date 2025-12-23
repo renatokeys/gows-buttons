@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func randomButtonId() string {
+func randomId() string {
 	return fmt.Sprintf("%016d", rand.Int63())
 }
 
@@ -33,33 +33,33 @@ func buttonTypeName(t __.ButtonType) string {
 }
 
 func buttonToNativeFlowButton(button *__.Button) *waE2E.InteractiveMessage_NativeFlowMessage_NativeFlowButton {
-	buttonId := button.GetId()
-	if buttonId == "" {
-		buttonId = randomButtonId()
+	buttonParams := map[string]interface{}{
+		"display_text": button.Text,
+		"id":           button.Id,
+		"disabled":     false,
 	}
 
-	buttonParams := map[string]interface{}{
-		"display_text": button.GetText(),
-		"id":           buttonId,
-		"disabled":     false,
+	if button.Id == "" {
+		buttonParams["id"] = randomId()
 	}
 
 	switch button.Type {
 	case __.ButtonType_BUTTON_CALL:
-		buttonParams["phone_number"] = button.GetPhoneNumber()
+		buttonParams["phone_number"] = button.PhoneNumber
 	case __.ButtonType_BUTTON_COPY:
-		buttonParams["copy_code"] = button.GetCopyCode()
+		buttonParams["copy_code"] = button.CopyCode
 	case __.ButtonType_BUTTON_URL:
-		buttonParams["url"] = button.GetUrl()
-		buttonParams["merchant_url"] = button.GetUrl()
+		buttonParams["url"] = button.Url
+		buttonParams["merchant_url"] = button.Url
 	}
 
 	paramsJson, _ := json.Marshal(buttonParams)
 	name := buttonTypeName(button.Type)
+	paramsStr := string(paramsJson)
 
 	return &waE2E.InteractiveMessage_NativeFlowMessage_NativeFlowButton{
-		Name:             proto.String(name),
-		ButtonParamsJSON: proto.String(string(paramsJson)),
+		Name:             &name,
+		ButtonParamsJSON: &paramsStr,
 	}
 }
 
@@ -82,13 +82,14 @@ func (s *Server) SendButtons(ctx context.Context, req *__.SendButtonsRequest) (*
 
 	messageParamsJson, _ := json.Marshal(map[string]interface{}{
 		"from":       "api",
-		"templateId": randomButtonId(),
+		"templateId": randomId(),
 	})
+	messageParamsStr := string(messageParamsJson)
 
 	// Build native flow message
 	nativeFlowMessage := &waE2E.InteractiveMessage_NativeFlowMessage{
 		Buttons:           buttons,
-		MessageParamsJSON: proto.String(string(messageParamsJson)),
+		MessageParamsJSON: &messageParamsStr,
 	}
 
 	// Build interactive message
@@ -99,16 +100,16 @@ func (s *Server) SendButtons(ctx context.Context, req *__.SendButtonsRequest) (*
 	}
 
 	// Add header if present
-	if req.GetHeader() != "" || len(req.GetHeaderImage()) > 0 {
-		hasMedia := len(req.GetHeaderImage()) > 0
+	if req.Header != "" || len(req.HeaderImage) > 0 {
+		hasMedia := len(req.HeaderImage) > 0
 		interactiveMessage.Header = &waE2E.InteractiveMessage_Header{
-			Title:              proto.String(req.GetHeader()),
-			HasMediaAttachment: proto.Bool(hasMedia),
+			Title:              proto.String(req.Header),
+			HasMediaAttachment: &hasMedia,
 		}
 
 		// Upload header image if present
-		if len(req.GetHeaderImage()) > 0 {
-			mediaResponse, err := cli.UploadMedia(ctx, jid, req.GetHeaderImage(), whatsmeow.MediaImage)
+		if len(req.HeaderImage) > 0 {
+			mediaResponse, err := cli.UploadMedia(ctx, jid, req.HeaderImage, whatsmeow.MediaImage)
 			if err != nil {
 				return nil, err
 			}
@@ -126,40 +127,29 @@ func (s *Server) SendButtons(ctx context.Context, req *__.SendButtonsRequest) (*
 	}
 
 	// Add body if present
-	if req.GetBody() != "" {
+	if req.Body != "" {
 		interactiveMessage.Body = &waE2E.InteractiveMessage_Body{
-			Text: proto.String(req.GetBody()),
+			Text: proto.String(req.Body),
 		}
 	}
 
 	// Add footer if present
-	if req.GetFooter() != "" {
+	if req.Footer != "" {
 		interactiveMessage.Footer = &waE2E.InteractiveMessage_Footer{
-			Text: proto.String(req.GetFooter()),
+			Text: proto.String(req.Footer),
 		}
 	}
 
-	// Wrap in ViewOnceMessage (required for buttons to display correctly)
-	deviceListMetadataVersion := int32(2)
+	// Send InteractiveMessage directly
 	message := &waE2E.Message{
-		ViewOnceMessage: &waE2E.FutureProofMessage{
-			Message: &waE2E.Message{
-				MessageContextInfo: &waE2E.MessageContextInfo{
-					DeviceListMetadata:        &waE2E.DeviceListMetadata{},
-					DeviceListMetadataVersion: &deviceListMetadataVersion,
-				},
-				InteractiveMessage: interactiveMessage,
-			},
-		},
+		InteractiveMessage: interactiveMessage,
 	}
 
+	// gows-plus uses 4 args and different response structure
 	res, err := cli.SendMessage(ctx, jid, message, whatsmeow.SendRequestExtra{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &__.MessageResponse{
-		Id:        res.Info.ID,
-		Timestamp: res.Info.Timestamp.Unix(),
-	}, nil
+	return &__.MessageResponse{Id: res.Info.ID, Timestamp: res.Info.Timestamp.Unix()}, nil
 }
